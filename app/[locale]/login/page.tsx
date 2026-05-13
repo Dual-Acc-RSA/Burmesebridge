@@ -1,89 +1,87 @@
-export default async function LoginPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+"use client";
 
-  const content = {
-    my: {
-      title: "ဝင်ရန်",
-      subtitle: "BurmeseBridge အကောင့်ဖြင့် ဝင်ရောက်ရန်",
-      email: "Email",
-      password: "Password",
-      button: "Login",
-      note: "နောက်ပိုင်း Supabase Login နှင့် ချိတ်ဆက်မည်။",
-      registerText: "အကောင့်မရှိသေးဘူးလား? အကောင့်ဖွင့်ရန်",
-    },
-    zh: {
-      title: "登录",
-      subtitle: "登录 BurmeseBridge 账号",
-      email: "邮箱",
-      password: "密码",
-      button: "登录",
-      note: "后面会接 Supabase 登录系统。",
-      registerText: "没有账号？创建账号",
-    },
-    en: {
-      title: "Login",
-      subtitle: "Login to your BurmeseBridge account",
-      email: "Email",
-      password: "Password",
-      button: "Login",
-      note: "This will connect to Supabase Auth later.",
-      registerText: "No account? Create one",
-    },
-  };
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-  const t = content[locale as keyof typeof content] || content.en;
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Login success");
+      window.location.href = "/my";
+    }
+
+    setLoading(false);
+  }
 
   return (
     <main
       style={{
-        padding: "48px 24px 96px",
-        background: "#f8fafc",
         minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#f8fafc",
+        padding: "24px",
       }}
     >
-      <section
+      <div
         style={{
-          maxWidth: "520px",
-          margin: "0 auto",
+          width: "100%",
+          maxWidth: "420px",
           background: "white",
-          padding: "36px",
-          borderRadius: "24px",
+          padding: "32px",
+          borderRadius: "20px",
           border: "1px solid #e2e8f0",
-          boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
+          boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
         }}
       >
-        <h1 style={{ fontSize: "42px", marginBottom: "12px" }}>
-          {t.title}
-        </h1>
-
-        <p
+        <h1
           style={{
-            color: "#64748b",
-            lineHeight: 1.8,
-            marginBottom: "28px",
+            fontSize: "36px",
+            marginBottom: "24px",
           }}
         >
-          {t.subtitle}
-        </p>
+          Login
+        </h1>
 
-        <label style={label}>
-          {t.email}
-          <input type="email" style={input} />
-        </label>
+        <input
+          type="email"
+          placeholder="Email"
+          style={input}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        <label style={label}>
-          {t.password}
-          <input type="password" style={input} />
-        </label>
+        <input
+          type="password"
+          placeholder="Password"
+          style={input}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-        <button style={button}>{t.button}</button>
+        <button
+          style={button}
+          onClick={handleLogin}
+        >
+          {loading ? "Loading..." : "Login"}
+        </button>
 
         <a
-          href={`/${locale}/register`}
+          href="/my/register"
           style={{
             display: "block",
             marginTop: "18px",
@@ -92,32 +90,17 @@ export default async function LoginPage({
             fontWeight: 700,
           }}
         >
-          {t.registerText}
+          No account? Create one
         </a>
-
-        <p
-          style={{
-            marginTop: "20px",
-            color: "#64748b",
-            fontSize: "14px",
-          }}
-        >
-          {t.note}
-        </p>
-      </section>
+      </div>
     </main>
   );
 }
 
-const label = {
-  display: "grid",
-  gap: "8px",
-  marginBottom: "18px",
-  fontWeight: 700,
-};
-
 const input = {
-  padding: "14px 16px",
+  width: "100%",
+  padding: "14px",
+  marginBottom: "16px",
   borderRadius: "12px",
   border: "1px solid #cbd5e1",
   fontSize: "16px",
@@ -125,12 +108,12 @@ const input = {
 
 const button = {
   width: "100%",
-  marginTop: "8px",
-  padding: "14px 18px",
+  padding: "14px",
   borderRadius: "12px",
   border: "none",
   background: "#2563eb",
   color: "white",
-  fontSize: "16px",
   fontWeight: 700,
+  fontSize: "16px",
+  cursor: "pointer",
 };
