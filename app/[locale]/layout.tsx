@@ -51,10 +51,12 @@ export default async function LocaleLayout({
           }}
         >
           <Link href={`/${locale}`}>首页</Link>
-          <Link href={`/${locale}/learn`}>学习</Link>
-          <Link href={`/${locale}/forum`}>社区</Link>
-          <Link href={`/${locale}/jobs`}>工作</Link>
-          <Link href={`/${locale}/news`}>新闻</Link>
+<Link href={`/${locale}/learn`}>学习</Link>
+<Link href={`/${locale}/forum`}>社区</Link>
+<Link href={`/${locale}/jobs`}>工作</Link>
+<Link href={`/${locale}/news`}>新闻</Link>
+<Link href={`/${locale}/checkin`}>签到</Link>
+<Link href={`/${locale}/me`}>我的</Link>
         </div>
       </nav>
 
