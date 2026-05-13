@@ -1,66 +1,102 @@
 import Link from "next/link";
-import { ReactNode } from "react";
-
-type Props = {
-  children: ReactNode;
-  params: Promise<{ locale: string }>;
-};
 
 export default async function LocaleLayout({
   children,
   params,
-}: Props) {
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
 
+  const nav = {
+    my: {
+      home: "ပင်မ",
+      learn: "သင်ယူရန်",
+      forum: "အသိုင်းအဝိုင်း",
+      jobs: "အလုပ်",
+      news: "သတင်း",
+      checkin: "Check In",
+      me: "ကျွန်ုပ်",
+    },
+    zh: {
+      home: "首页",
+      learn: "学习",
+      forum: "社区",
+      jobs: "工作",
+      news: "新闻",
+      checkin: "签到",
+      me: "我的",
+    },
+    en: {
+      home: "Home",
+      learn: "Learn",
+      forum: "Forum",
+      jobs: "Jobs",
+      news: "News",
+      checkin: "Check In",
+      me: "Me",
+    },
+  };
+
+  const t = nav[locale as keyof typeof nav] || nav.en;
+
   return (
-    <div
-      style={{
-        fontFamily: "Noto Serif Myanmar, serif",
-        minHeight: "100vh",
-        background: "#f8f8f8",
-      }}
-    >
+    <div>
       <nav
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "16px 24px",
-          background: "#ffffff",
-          borderBottom: "1px solid #e5e5e5",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
+          padding: "24px 40px",
+          borderBottom: "1px solid #e5e7eb",
+          background: "white",
         }}
       >
-        <div
+        <Link
+          href={`/${locale}`}
           style={{
+            fontSize: "32px",
             fontWeight: "bold",
-            fontSize: "22px",
-            color: "#1d4ed8",
+            color: "#2563eb",
+            textDecoration: "none",
           }}
         >
           BurmeseBridge
-        </div>
+        </Link>
 
         <div
           style={{
             display: "flex",
-            gap: "20px",
-            fontSize: "15px",
+            gap: "22px",
+            alignItems: "center",
+            flexWrap: "wrap",
           }}
         >
-          <Link href={`/${locale}`}>首页</Link>
-<Link href={`/${locale}/learn`}>学习</Link>
-<Link href={`/${locale}/forum`}>社区</Link>
-<Link href={`/${locale}/jobs`}>工作</Link>
-<Link href={`/${locale}/news`}>新闻</Link>
-<Link href={`/${locale}/checkin`}>签到</Link>
-<Link href={`/${locale}/me`}>我的</Link>
+          <Link href={`/${locale}`}>{t.home}</Link>
+          <Link href={`/${locale}/learn`}>{t.learn}</Link>
+          <Link href={`/${locale}/forum`}>{t.forum}</Link>
+          <Link href={`/${locale}/jobs`}>{t.jobs}</Link>
+          <Link href={`/${locale}/news`}>{t.news}</Link>
+          <Link href={`/${locale}/checkin`}>{t.checkin}</Link>
+          <Link href={`/${locale}/me`}>{t.me}</Link>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginLeft: "16px",
+              fontWeight: 700,
+            }}
+          >
+            <Link href="/my">MY</Link>
+            <Link href="/zh">中文</Link>
+            <Link href="/en">EN</Link>
+          </div>
         </div>
       </nav>
 
-      <main>{children}</main>
+      {children}
     </div>
   );
 }
