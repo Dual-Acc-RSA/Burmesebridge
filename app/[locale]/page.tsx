@@ -107,39 +107,16 @@ export default async function HomePage({
           margin: "0 auto",
         }}
       >
-        <div
-          style={{
-            background: "linear-gradient(135deg,#2563eb,#10b981)",
-            borderRadius: "28px",
-            padding: "48px",
-            color: "white",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "56px",
-              marginBottom: "20px",
-            }}
-          >
+        <div className="home-hero">
+          <h1 className="home-hero-title">
             {t.title}
           </h1>
 
-          <p
-            style={{
-              fontSize: "24px",
-              lineHeight: 1.8,
-              marginBottom: "16px",
-            }}
-          >
+          <p className="home-hero-subtitle">
             {t.subtitle}
           </p>
 
-          <p
-            style={{
-              opacity: 0.95,
-              fontSize: "18px",
-            }}
-          >
+          <p className="home-hero-desc">
             {t.desc}
           </p>
         </div>
