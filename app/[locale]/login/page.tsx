@@ -13,6 +13,7 @@ export default async function LoginPage({
       password: "Password",
       button: "Login",
       note: "နောက်ပိုင်း Supabase Login နှင့် ချိတ်ဆက်မည်။",
+      registerText: "အကောင့်မရှိသေးဘူးလား? အကောင့်ဖွင့်ရန်",
     },
     zh: {
       title: "登录",
@@ -21,6 +22,7 @@ export default async function LoginPage({
       password: "密码",
       button: "登录",
       note: "后面会接 Supabase 登录系统。",
+      registerText: "没有账号？创建账号",
     },
     en: {
       title: "Login",
@@ -29,6 +31,7 @@ export default async function LoginPage({
       password: "Password",
       button: "Login",
       note: "This will connect to Supabase Auth later.",
+      registerText: "No account? Create one",
     },
   };
 
@@ -78,6 +81,19 @@ export default async function LoginPage({
         </label>
 
         <button style={button}>{t.button}</button>
+
+        <a
+          href={`/${locale}/register`}
+          style={{
+            display: "block",
+            marginTop: "18px",
+            textAlign: "center",
+            color: "#2563eb",
+            fontWeight: 700,
+          }}
+        >
+          {t.registerText}
+        </a>
 
         <p
           style={{
