@@ -7,6 +7,10 @@ create table if not exists public.posts (
 
 alter table public.posts enable row level security;
 
+drop policy if exists "Anyone can view posts" on public.posts;
+drop policy if exists "Users can create own posts" on public.posts;
+drop policy if exists "Users can delete own posts" on public.posts;
+
 create policy "Anyone can view posts"
 on public.posts
 for select
