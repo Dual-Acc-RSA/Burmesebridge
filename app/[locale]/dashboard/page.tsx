@@ -117,7 +117,12 @@ export default function DashboardPage() {
 
       profile = newProfile;
     }
+const { count } = await supabase
+  .from("checkins")
+  .select("*", { count: "exact", head: true })
+  .eq("user_id", user.id);
 
+setPoints(count || 0);
     showProfile(profile, user.email || "");
     setLoading(false);
   }
@@ -125,7 +130,6 @@ export default function DashboardPage() {
   function showProfile(profile: Profile, fallbackEmail: string) {
     setEmail(profile.email || fallbackEmail);
     setDisplayName(profile.display_name || "");
-    setPoints(profile.points || 0);
   }
 
   if (loading) {
