@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://burmesebridge.eu.cc
+
+# Sitemaps
+Sitemap: https://burmesebridge.eu.cc/sitemap.xml
