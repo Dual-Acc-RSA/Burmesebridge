@@ -8,33 +8,67 @@ export default function ProfilePage() {
   const params = useParams();
   const locale = String(params.locale || "my");
 
+  const text = {
+    my: {
+      title: "ပရိုဖိုင် ပြင်ရန်",
+      email: "အီးမေးလ်",
+      name: "အမည်",
+      placeholder: "သင့်အမည်",
+      save: "သိမ်းမည်",
+      saved: "သိမ်းပြီးပါပြီ",
+      loading: "ခေတ္တစောင့်ပါ...",
+    },
+    zh: {
+      title: "编辑个人资料",
+      email: "邮箱",
+      name: "显示名称",
+      placeholder: "请输入你的名字",
+      save: "保存",
+      saved: "保存成功",
+      loading: "加载中...",
+    },
+    en: {
+      title: "Edit Profile",
+      email: "Email",
+      name: "Display Name",
+      placeholder: "Your name",
+      save: "Save",
+      saved: "Saved successfully",
+      loading: "Loading...",
+    },
+  };
+
+  const t = text[locale as keyof typeof text] || text.en;
+
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    async function loadProfile() {
-      const { data: userData } = await supabase.auth.getUser();
+    loadProfile();
+  }, []);
 
-      if (!userData.user) {
-        window.location.href = `/${locale}/login`;
-        return;
-      }
+  async function loadProfile() {
+    const { data: userData } = await supabase.auth.getUser();
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("email, display_name")
-        .eq("id", userData.user.id)
-        .maybeSingle();
-
-      setEmail(data?.email || userData.user.email || "");
-      setDisplayName(data?.display_name || "");
-      setLoading(false);
+    if (!userData.user) {
+      window.location.href = `/${locale}/login`;
+      return;
     }
 
-    loadProfile();
-  }, [locale]);
+    const user = userData.user;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("email, display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    setEmail(data?.email || user.email || "");
+    setDisplayName(data?.display_name || "");
+    setLoading(false);
+  }
 
   async function saveProfile() {
     setMessage("");
@@ -46,56 +80,55 @@ export default function ProfilePage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: displayName,
-      })
-      .eq("id", userData.user.id);
+    const user = userData.user;
+
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      email: user.email,
+      display_name: displayName,
+      role: "user",
+    });
 
     if (error) {
       setMessage(error.message);
       return;
     }
 
-    setMessage("Saved successfully");
+    setMessage(t.saved);
+    await loadProfile();
   }
 
   if (loading) {
-    return <main style={{ padding: 40 }}>Loading...</main>;
+    return <main style={{ padding: 40 }}>{t.loading}</main>;
   }
 
   return (
     <main style={{ padding: "48px 24px", minHeight: "100vh" }}>
       <section style={{ maxWidth: "640px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "42px", marginBottom: "24px" }}>
-          Edit Profile
-        </h1>
+        <h1 style={{ fontSize: "42px", marginBottom: "24px" }}>{t.title}</h1>
 
         <div style={card}>
           <label style={label}>
-            Email
+            {t.email}
             <input value={email} disabled style={input} />
           </label>
 
           <label style={label}>
-            Display Name
+            {t.name}
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               style={input}
-              placeholder="Your name"
+              placeholder={t.placeholder}
             />
           </label>
 
           <button onClick={saveProfile} style={button}>
-            Save
+            {t.save}
           </button>
 
           {message && (
-            <p style={{ marginTop: 16, color: "#10b981" }}>
-              {message}
-            </p>
+            <p style={{ marginTop: 16, color: "#10b981" }}>{message}</p>
           )}
         </div>
       </section>
@@ -133,4 +166,5 @@ const button = {
   borderRadius: "12px",
   border: "none",
   fontWeight: 700,
+  cursor: "pointer",
 };
