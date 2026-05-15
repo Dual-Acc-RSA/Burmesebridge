@@ -326,43 +326,111 @@ export default function ForumPage() {
   onDelete={()=>deletePost(post.id)}
 />
 
-                  <div style={{ marginTop: 14 }}>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input
-                        value={commentText[post.id] || ""}
-                        onChange={(e) =>
-                          setCommentText({
-                            ...commentText,
-                            [post.id]: e.target.value,
-                          })
-                        }
-                        placeholder={t.commentPlaceholder}
-                        style={commentInput}
-                      />
+                  <div
+  style={{
+    marginTop:16,
+    paddingTop:16,
+    borderTop:"1px solid #e5e7eb"
+  }}
+>
+  <div
+    style={{
+      display:"flex",
+      gap:"10px",
+      alignItems:"center"
+    }}
+  >
+    <div
+      style={{
+        width:34,
+        height:34,
+        borderRadius:"999px",
+        background:"#2563eb",
+        color:"white",
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center",
+        fontWeight:700
+      }}
+    >
+      {author.slice(0,1).toUpperCase()}
+    </div>
 
-                      <button onClick={() => createComment(post.id)} style={sendButton}>
-                        {t.send}
-                      </button>
-                    </div>
+    <input
+      value={commentText[post.id] || ""}
+      onChange={(e)=>
+        setCommentText({
+          ...commentText,
+          [post.id]:e.target.value
+        })
+      }
+      placeholder={t.commentPlaceholder}
+      style={{
+        flex:1,
+        padding:"12px 16px",
+        borderRadius:"999px",
+        border:"1px solid #e5e7eb",
+        background:"#f8fafc"
+      }}
+    />
 
-                    <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-                      {(comments[post.id] || []).map((comment) => {
-                        const cp = Array.isArray(comment.profiles)
-                          ? comment.profiles[0]
-                          : comment.profiles;
+    <button
+      onClick={()=>createComment(post.id)}
+      style={{
+        border:"none",
+        background:"#2563eb",
+        color:"white",
+        padding:"10px 16px",
+        borderRadius:"999px",
+        cursor:"pointer"
+      }}
+    >
+      {t.send}
+    </button>
+  </div>
 
-                        const commentAuthor =
-                          cp?.display_name || cp?.email || t.anonymous;
+  <div
+    style={{
+      marginTop:14,
+      display:"grid",
+      gap:"10px"
+    }}
+  >
+    {(comments[post.id]||[]).map((comment)=>{
 
-                        return (
-                          <div key={comment.id} style={commentBox}>
-                            <strong>{commentAuthor}</strong>
-                            <p style={{ marginTop: 4 }}>{comment.content}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+      const cp=Array.isArray(comment.profiles)
+      ?comment.profiles[0]
+      :comment.profiles;
+
+      const commentAuthor=
+      cp?.display_name ||
+      cp?.email ||
+      t.anonymous;
+
+      return(
+
+      <div
+      key={comment.id}
+      style={{
+      background:"#f8fafc",
+      padding:"12px",
+      borderRadius:"16px"
+      }}
+      >
+
+      <strong>{commentAuthor}</strong>
+
+      <p style={{marginTop:4}}>
+      {comment.content}
+      </p>
+
+      </div>
+
+      )
+
+    })}
+  </div>
+</div>
                 </div>
               </div>
             </article>
