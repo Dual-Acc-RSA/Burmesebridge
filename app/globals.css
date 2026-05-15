@@ -300,3 +300,15 @@ h3:lang(my) {
     flex-direction: column;
   }
 }
+/* ===== Force One Font Globally ===== */
+
+html,
+body,
+body *,
+button,
+input,
+textarea,
+select,
+a {
+  font-family: var(--font-app), serif !important;
+}
