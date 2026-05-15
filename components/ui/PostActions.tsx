@@ -1,36 +1,63 @@
 import {
-Heart,
-MessageCircle,
-Share2
+  Heart,
+  MessageCircle,
+  Share2,
+  Trash2,
 } from "lucide-react";
 
 import IconButton from "./IconButton";
 
-export default function PostActions(){
+type Props = {
+  liked: boolean;
+  likeLabel: string;
+  likedLabel: string;
+  commentLabel: string;
+  shareLabel: string;
+  deleteLabel: string;
+  canDelete: boolean;
+  onLike: () => void;
+  onShare: () => void;
+  onDelete: () => void;
+};
 
-return(
+export default function PostActions({
+  liked,
+  likeLabel,
+  likedLabel,
+  commentLabel,
+  shareLabel,
+  deleteLabel,
+  canDelete,
+  onLike,
+  onShare,
+  onDelete,
+}: Props) {
+  return (
+    <div className="feedActions">
+      <IconButton
+        icon={<Heart size={18} fill={liked ? "currentColor" : "none"} />}
+        label={liked ? likedLabel : likeLabel}
+        onClick={onLike}
+      />
 
-<div
-className="feedActions"
->
+      <IconButton
+        icon={<MessageCircle size={18} />}
+        label={commentLabel}
+      />
 
-<IconButton
-icon={<Heart size={18}/>}
-label="Like"
-/>
+      <IconButton
+        icon={<Share2 size={18} />}
+        label={shareLabel}
+        onClick={onShare}
+      />
 
-<IconButton
-icon={<MessageCircle size={18}/>}
-label="Comment"
-/>
-
-<IconButton
-icon={<Share2 size={18}/>}
-label="Share"
-/>
-
-</div>
-
-)
-
+      {canDelete && (
+        <IconButton
+          icon={<Trash2 size={18} />}
+          label={deleteLabel}
+          onClick={onDelete}
+        />
+      )}
+    </div>
+  );
 }

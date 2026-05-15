@@ -1,5 +1,5 @@
 "use client";
-
+import PostActions from "@/components/ui/PostActions";
 import Badge from "@/components/Badges";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -269,7 +269,7 @@ export default function ForumPage() {
     <main style={page}>
       <h1 style={title}>{t.title}</h1>
 
-      <div style={composerCard}>
+      <div className="feedComposer">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -291,7 +291,7 @@ export default function ForumPage() {
           const badge = profile?.badge || "member";
 
           return (
-            <article id={`post-${post.id}`} key={post.id} style={postCard}>
+            <article id={`post-${post.id}`} key={post.id} className="feedCard">
               <div style={{ display: "flex", gap: 14 }}>
                 <div style={avatar}>{author.slice(0, 1).toUpperCase()}</div>
 
@@ -313,26 +313,18 @@ export default function ForumPage() {
                     <span>{comments[post.id]?.length || 0} {t.comment}</span>
                   </div>
 
-                  <div style={actionBar}>
-                    <button onClick={() => toggleLike(post.id)} style={actionButton}>
-                      {myLikes[post.id] ? `👍 ${t.liked}` : `👍 ${t.like}`}
-                    </button>
-
-                    <button style={actionButton}>💬 {t.comment}</button>
-
-                    <button onClick={() => sharePost(post.id)} style={actionButton}>
-                      ↗ {t.share}
-                    </button>
-
-                    {currentUserId === post.user_id && (
-                      <button
-                        onClick={() => deletePost(post.id)}
-                        style={{ ...actionButton, color: "#ef4444" }}
-                      >
-                        🗑 {t.delete}
-                      </button>
-                    )}
-                  </div>
+                  <PostActions
+  liked={!!myLikes[post.id]}
+  likeLabel={t.like}
+  likedLabel={t.liked}
+  commentLabel={t.comment}
+  shareLabel={t.share}
+  deleteLabel={t.delete}
+  canDelete={currentUserId===post.user_id}
+  onLike={()=>toggleLike(post.id)}
+  onShare={()=>sharePost(post.id)}
+  onDelete={()=>deletePost(post.id)}
+/>
 
                   <div style={{ marginTop: 14 }}>
                     <div style={{ display: "flex", gap: 8 }}>
