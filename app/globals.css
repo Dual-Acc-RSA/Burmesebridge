@@ -1,271 +1,122 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap");
 
-:root{
---background:#f8fafc;
---foreground:#0f172a;
-
---card:#ffffff;
-
---primary:#2563eb;
---primaryHover:#1d4ed8;
-
---muted:#64748b;
-
---border:#e2e8f0;
-
---shadow:
-0 10px 30px rgba(15,23,42,.06);
-
---radius:20px;
-
---max-width:1200px;
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+  --radius: 24px;
+  --max-width: 1180px;
 }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html{
-scroll-behavior:smooth;
+html {
+  scroll-behavior: smooth;
 }
 
+html,
 body{
-background:var(--background);
-color:var(--foreground);
-
 font-family:
-"Noto Sans Myanmar",
-"Noto Sans SC",
-sans-serif;
+var(--font-app),
+serif;
 
-min-height:100vh;
-
--webkit-font-smoothing:
-antialiased;
+background:#f8fafc;
+color:#0f172a;
 }
 
-a{
-color:inherit;
-text-decoration:none;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-button{
-font-family:inherit;
+button,
+input,
+textarea {
+  font-family: inherit;
 }
 
-.container{
-width:100%;
-max-width:var(--max-width);
-
-margin:auto;
-
-padding-left:20px;
-padding-right:20px;
+/* 缅语标题 */
+h3:lang(my) {
+  font-family: "Noto Serif Myanmar", serif;
 }
 
-.page{
-padding-top:32px;
-padding-bottom:80px;
+/* 中文 */
+
+/* ===== Site Shell ===== */
+
+.site-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 34%),
+    radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 30%),
+    #f8fafc;
 }
 
-.card{
-background:var(--card);
-
-border:
-1px solid var(--border);
-
-border-radius:
-var(--radius);
-
-padding:24px;
-
-box-shadow:
-var(--shadow);
+.site-main {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 32px 20px 96px;
 }
 
-.button{
-
-border:none;
-
-background:
-var(--primary);
-
-color:white;
-
-padding:
-12px 18px;
-
-border-radius:
-999px;
-
-cursor:pointer;
-
-font-weight:700;
-
-transition:.25s;
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-height: 72px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
 }
 
-.button:hover{
-background:
-var(--primaryHover);
-
-transform:
-translateY(-2px);
+.site-logo {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
 }
 
-.input,
-.textarea{
-
-width:100%;
-
-padding:14px;
-
-border-radius:16px;
-
-border:
-1px solid var(--border);
-
-outline:none;
-
-font-size:16px;
-
-background:white;
+.site-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.textarea{
-min-height:120px;
-
-resize:none;
+.site-menu a {
+  padding: 10px 13px;
+  border-radius: 999px;
+  color: #475569;
+  font-weight: 700;
+  transition: 0.2s;
 }
 
-.avatar{
-
-width:52px;
-height:52px;
-
-border-radius:999px;
-
-background:
-linear-gradient(
-135deg,
-#2563eb,
-#7c3aed
-);
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-color:white;
-
-font-weight:800;
+.site-menu a:hover {
+  background: #eef2ff;
+  color: var(--primary);
 }
 
-.feed{
-
-display:grid;
-
-gap:18px;
+.site-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.feedActions{
-
-display:flex;
-
-gap:16px;
-
-padding-top:12px;
-
-border-top:
-1px solid var(--border);
-
-margin-top:16px;
-}
-
-.feedButton{
-
-border:none;
-
-background:none;
-
-cursor:pointer;
-
-font-weight:600;
-
-color:
-var(--muted);
-}
-.feedActions{
-display:flex;
-gap:18px;
-margin-top:18px;
-padding-top:14px;
-border-top:1px solid #e5e7eb;
-}
-
-.feedActions button{
-
-transition:.2s;
-
-}
-
-.feedActions button:hover{
-
-background:#f1f5f9;
-
-color:#2563eb;
-
-transform:translateY(-2px);
-
-}
-
-.feedCard{
-
-background:white;
-
-border-radius:24px;
-
-padding:22px;
-
-border:1px solid #e5e7eb;
-
-box-shadow:
-0 2px 10px rgba(0,0,0,.04);
-
-transition:.25s;
-
-}
-
-.feedCard:hover{
-
-transform:translateY(-3px);
-
-box-shadow:
-0 15px 35px rgba(0,0,0,.08);
-
-}
-
-.feedComposer{
-
-background:white;
-
-padding:24px;
-
-border-radius:24px;
-
-border:1px solid #e5e7eb;
-
-margin-bottom:24px;
-
-box-shadow:
-0 4px 12px rgba(0,0,0,.04);
-
-}
-/* ===== BurmeseBridge Feed UI v1 ===== */
+/* ===== Feed UI ===== */
 
 .feedShell {
   width: 100%;
@@ -281,12 +132,17 @@ box-shadow:
   margin-bottom: 24px;
 }
 
+.feed {
+  display: grid;
+  gap: 18px;
+}
+
 .feedComposer {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 22px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow);
   margin-bottom: 24px;
 }
 
@@ -305,25 +161,30 @@ box-shadow:
 .feedComposer button {
   margin-top: 14px;
   border: none;
-  background: #2563eb;
-  color: #ffffff;
+  background: var(--primary);
+  color: white;
   padding: 12px 22px;
   border-radius: 999px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.feed {
-  display: grid;
-  gap: 18px;
+.feedComposer button:hover {
+  background: var(--primary-hover);
 }
 
 .feedCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 22px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow);
+  transition: 0.25s;
+}
+
+.feedCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
 }
 
 .feedActions {
@@ -332,20 +193,110 @@ box-shadow:
   gap: 14px;
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
 }
 
 .feedActions button {
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--muted);
   font-weight: 700;
   cursor: pointer;
   padding: 8px 10px;
   border-radius: 12px;
+  transition: 0.2s;
 }
 
 .feedActions button:hover {
   background: #f1f5f9;
-  color: #2563eb;
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* ===== Footer ===== */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: white;
+}
+
+.site-footer-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 28px 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--muted);
+}
+
+.site-footer h3 {
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.mobile-tabbar {
+  display: none;
+}
+
+/* ===== Mobile ===== */
+
+@media (max-width: 768px) {
+  .site-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .site-menu {
+    display: none;
+  }
+
+  .site-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .site-main {
+    padding: 24px 16px 96px;
+  }
+
+  .feedShell {
+    padding: 32px 0 96px;
+  }
+
+  .feedTitle {
+    font-size: 34px;
+  }
+
+  .mobile-tabbar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 80;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 10px;
+    border-radius: 24px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.28);
+  }
+
+  .mobile-tabbar a {
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    font-weight: 700;
+    padding: 8px 4px;
+  }
+
+  .site-footer {
+    padding-bottom: 80px;
+  }
+
+  .site-footer-inner {
+    flex-direction: column;
+  }
 }

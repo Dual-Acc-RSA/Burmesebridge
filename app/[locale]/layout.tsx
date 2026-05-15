@@ -15,12 +15,10 @@ export default async function LocaleLayout({
     my: {
       home: "ပင်မစာမျက်နှာ",
       learn: "သင်ယူရန်",
-      forum: "အသိုင်းအဝိုင်း",
+      forum: "Community",
       jobs: "အလုပ်",
       news: "သတင်း",
       checkin: "ချက်အင်လုပ်ရန်",
-      me: "ကျွန်ုပ်",
-      login: "ဝင်ရန်"
     },
     zh: {
       home: "首页",
@@ -29,25 +27,21 @@ export default async function LocaleLayout({
       jobs: "工作",
       news: "新闻",
       checkin: "签到",
-      me: "我的",
-      login: "登录"
     },
     en: {
       home: "Home",
       learn: "Learn",
-      forum: "Forum",
+      forum: "Community",
       jobs: "Jobs",
       news: "News",
       checkin: "Check In",
-      me: "Me",
-      login: "Login"
     },
   };
 
   const t = nav[locale as keyof typeof nav] || nav.en;
 
   return (
-    <div>
+    <div className="site-shell">
       <nav className="site-nav">
         <Link href={`/${locale}`} className="site-logo">
           BurmeseBridge
@@ -60,19 +54,23 @@ export default async function LocaleLayout({
           <Link href={`/${locale}/jobs`}>{t.jobs}</Link>
           <Link href={`/${locale}/news`}>{t.news}</Link>
           <Link href={`/${locale}/checkin`}>{t.checkin}</Link>
-          <AuthMenu locale={locale} />
         </div>
 
-        <LanguageMenu locale={locale} />
+        <div className="site-actions">
+          <AuthMenu locale={locale} />
+          <LanguageMenu locale={locale} />
+        </div>
       </nav>
 
-      {children}
+      <main className="site-main">{children}</main>
+
       <div className="mobile-tabbar">
         <Link href={`/${locale}`}>{t.home}</Link>
         <Link href={`/${locale}/learn`}>{t.learn}</Link>
         <Link href={`/${locale}/forum`}>{t.forum}</Link>
         <Link href={`/${locale}/checkin`}>{t.checkin}</Link>
       </div>
+
       <footer className="site-footer">
         <div className="site-footer-inner">
           <div>
