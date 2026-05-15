@@ -16,13 +16,13 @@ export default function AuthMenu({
 
   const text = {
     my: {
-      login: "ဝင်ရန်",
+      login: "အကောင့်ဝင်ရန်",
       me: "ကျွန်ုပ်",
       dashboard: "ဒက်ရှ်ဘုတ်",
       profile: "ပရိုဖိုင်",
       account: "ကျွန်ုပ်အကောင့်",
       checkin: "ချက်အင်",
-      logout: "ထွက်ရန်",
+      logout: "အကောင့်ထွက်ရန်",
     },
 
     zh: {

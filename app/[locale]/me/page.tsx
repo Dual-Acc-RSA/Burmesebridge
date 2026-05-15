@@ -13,9 +13,9 @@ export default function MePage() {
       user: "BurmeseBridge အသုံးပြုသူ",
       verified: "အတည်ပြုပြီးသော အဖွဲ့ဝင်",
       points: "အမှတ်",
-      streak: "ဆက်တိုက် ချက်အင်",
+      streak: "ဆက်တိုက်ချက်အင်",
       progress: "သင်ယူမှု",
-      posts: "ကျွန်ုပ်၏ Post များ",
+      posts: "ကျွန်ုပ်၏ပို့စ်များ",
       learn: "သင်ယူရန်",
       checkin: "နေ့စဉ်ချက်အင်",
       forum: "Community",
@@ -63,6 +63,7 @@ export default function MePage() {
 
   const [email, setEmail] = useState<string | null>(null);
   const [checkinCount, setCheckinCount] = useState(0);
+  const [postCount, setPostCount] = useState(0);
   const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
@@ -84,12 +85,19 @@ export default function MePage() {
 
       setDisplayName(profile?.display_name || "");
 
-      const { count } = await supabase
+      const { count: checkinsCount } = await supabase
         .from("checkins")
         .select("*", { count: "exact", head: true })
         .eq("user_id", data.user.id);
 
-      setCheckinCount(count || 0);
+      setCheckinCount(checkinsCount || 0);
+
+      const { count: postsCount } = await supabase
+        .from("posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", data.user.id);
+
+      setPostCount(postsCount || 0);
     }
 
     getUser();
@@ -140,7 +148,7 @@ export default function MePage() {
                 fontWeight: 700,
               }}
             >
-              B
+              {displayName ? displayName.slice(0, 1).toUpperCase() : "B"}
             </div>
 
             <div>
@@ -185,7 +193,7 @@ export default function MePage() {
 
             <div style={card}>
               <h3>{t.posts}</h3>
-              <p>0</p>
+              <p>{postCount}</p>
             </div>
           </div>
 
