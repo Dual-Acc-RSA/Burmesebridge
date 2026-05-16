@@ -81,33 +81,62 @@ return(
 style={{
 
 display:"inline-flex",
+
 alignItems:"center",
+
+justifyContent:"center",
+
 gap:"6px",
 
-padding:
-"5px 10px",
+padding:"6px 12px",
 
-borderRadius:
-999,
+borderRadius:999,
 
-background:
-badge.bg,
+background:badge.bg,
 
-color:
-badge.color,
+color:badge.color,
 
-fontSize:
-12,
+fontSize:"12px",
 
-fontWeight:
-700
+fontWeight:700,
+
+lineHeight:1,
+
+height:"30px"
+}}
+>
+
+<span
+style={{
+
+display:"flex",
+
+alignItems:"center",
+
+justifyContent:"center",
+
+marginTop:"1px"
 
 }}
 >
 
-<Icon size={14}/>
+<Icon
+size={14}
+strokeWidth={2.2}
+/>
+
+</span>
+
+<span
+style={{
+display:"flex",
+alignItems:"center"
+}}
+>
 
 {badge.label}
+
+</span>
 
 </span>
 
