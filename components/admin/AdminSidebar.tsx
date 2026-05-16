@@ -1,48 +1,59 @@
-/**
- * Admin 左侧导航
- */
+"use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
+
 import {
 LayoutDashboard,
 Users,
+FileText,
 Newspaper,
-MessageSquare,
 Shield
 } from "lucide-react";
 
+/**
+后台菜单
+*/
+
 export default function AdminSidebar(){
 
-const items=[
+const params=useParams();
+
+const locale=
+String(
+params.locale||"my"
+);
+
+const menu=[
 
 {
-label:"Dashboard",
-icon:LayoutDashboard,
-href:"/zh/admin"
+name:"Dashboard",
+icon:<LayoutDashboard size={18}/>,
+href:`/${locale}/admin`
 },
 
 {
-label:"Users",
-icon:Users,
-href:"/zh/admin/users"
+name:"Users",
+icon:<Users size={18}/>,
+href:`/${locale}/admin/users`
 },
 
 {
-label:"Posts",
-icon:MessageSquare,
-href:"/zh/admin/posts"
+name:"Posts",
+icon:<FileText size={18}/>,
+href:`/${locale}/admin/posts`
 },
 
 {
-label:"News",
-icon:Newspaper,
-href:"/zh/admin/news"
+name:"News",
+icon:<Newspaper size={18}/>,
+href:`/${locale}/admin/news`
 },
 
 {
-label:"Ban Center",
-icon:Shield,
-href:"/zh/admin/ban"
+name:"Ban Center",
+icon:<Shield size={18}/>,
+href:`/${locale}/admin/ban`
 }
 
 ]
@@ -51,29 +62,25 @@ return(
 
 <div className="adminSidebar">
 
-{items.map(item=>{
-
-const Icon=item.icon
-
-return(
+{menu.map(item=>(
 
 <Link
 key={item.href}
 href={item.href}
-className="adminLink"
+className="adminNavItem"
 >
 
-<Icon size={18}/>
+{item.icon}
 
 <span>
-{item.label}
+
+{item.name}
+
 </span>
 
 </Link>
 
-)
-
-})}
+))}
 
 </div>
 
