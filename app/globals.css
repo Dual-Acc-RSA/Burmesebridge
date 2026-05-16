@@ -469,3 +469,53 @@ margin-top:12px;
     filter: brightness(1.18);
   }
 }
+.badgeTooltipWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badgeIconGlow {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  animation: badgeGlow 2.2s ease-in-out infinite;
+}
+
+.badgeTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 38px;
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  background: #0f172a;
+  color: white;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  z-index: 999;
+  transition: 0.2s;
+}
+
+.badgeTooltipWrap:hover .badgeTooltip,
+.badgeTooltipWrap:focus-within .badgeTooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@keyframes badgeGlow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.18);
+  }
+}

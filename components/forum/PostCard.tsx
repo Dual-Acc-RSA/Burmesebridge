@@ -9,6 +9,7 @@ type Profile = {
   email?: string | null;
   verified?: boolean | null;
   badge?: string | null;
+  role?: string | null;
 };
 
 type Post = {
@@ -81,7 +82,7 @@ export default function PostCard({
     profile?.email ||
     labels.anonymous;
 
-  const badge = profile?.badge || "member";
+  const badge = profile?.badge || profile?.role || "member";
   const authorInitial = author.slice(0, 1).toUpperCase();
 
   return (

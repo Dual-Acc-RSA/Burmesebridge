@@ -10,6 +10,18 @@ type Profile = {
   display_name?: string | null;
   email?: string | null;
   verified?: boolean | null;
+
+  /**
+   * 用户身份
+   * member
+   * moderator
+   * admin
+   */
+  role?: string | null;
+
+  /**
+   * UI徽章
+   */
   badge?: string | null;
 };
 
@@ -124,7 +136,8 @@ export default function ForumPage() {
           display_name,
           email,
           verified,
-          badge
+          badge,
+          role
         )
       `)
       .order("created_at", { ascending: false });
