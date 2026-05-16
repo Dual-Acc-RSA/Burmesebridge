@@ -1,10 +1,15 @@
+"use client";
+
+import { useParams } from "next/navigation";
+import { useState } from "react";
+
 import {
   BadgeCheck,
   Crown,
+  Shield,
   GraduationCap,
-  ShieldCheck,
   Star,
-  User,
+  UserRound
 } from "lucide-react";
 
 type BadgeType =
@@ -15,64 +20,181 @@ type BadgeType =
   | "vip"
   | "member";
 
-export default function Badge({ type }: { type: BadgeType }) {
-  const badges = {
-    verified: {
-      label: "Verified",
-      icon: BadgeCheck,
-      bg: "#eff6ff",
-      color: "#2563eb",
-    },
-    moderator: {
-      label: "Moderator",
-      icon: ShieldCheck,
-      bg: "#fff7ed",
-      color: "#f59e0b",
-    },
-    admin: {
-      label: "Admin",
-      icon: Crown,
-      bg: "#fef2f2",
-      color: "#dc2626",
-    },
-    teacher: {
-      label: "Teacher",
-      icon: GraduationCap,
-      bg: "#f5f3ff",
-      color: "#7c3aed",
-    },
-    vip: {
-      label: "VIP",
-      icon: Star,
-      bg: "#fff7ed",
-      color: "#ea580c",
-    },
-    member: {
-      label: "Member",
-      icon: User,
-      bg: "#f8fafc",
-      color: "#64748b",
-    },
-  };
+export default function Badge({
+  type,
+}:{
+  type:BadgeType
+}){
 
-  const badge = badges[type] || badges.member;
-  const Icon = badge.icon;
+const params=useParams();
 
-  return (
-    <span className="badgeTooltipWrap">
-      <span
-        className="badgeIconGlow"
-        aria-label={badge.label}
-        style={{
-          background: badge.bg,
-          color: badge.color,
-          boxShadow: `0 0 14px ${badge.color}55`,
-        }}
-      >
-        <Icon size={16} strokeWidth={2.4} />
-      </span>
+const locale=String(
+params.locale||"en"
+);
 
-      <span className="badgeTooltip">{badge.label}</span>
-    </span>
-  );
+const [show,setShow]=useState(false);
+
+const labels={
+
+my:{
+verified:"အတည်ပြုပြီး",
+moderator:"စီမံခန့်ခွဲသူ",
+admin:"အက်မင်",
+teacher:"ဆရာ",
+vip:"VIP",
+member:"အသင်းဝင်"
+},
+
+zh:{
+verified:"已认证",
+moderator:"版主",
+admin:"管理员",
+teacher:"老师",
+vip:"VIP",
+member:"会员"
+},
+
+en:{
+verified:"Verified",
+moderator:"Moderator",
+admin:"Admin",
+teacher:"Teacher",
+vip:"VIP",
+member:"Member"
+}
+
+};
+
+const text=
+labels[
+locale as keyof typeof labels
+] || labels.en;
+
+const badges={
+
+verified:{
+icon:<BadgeCheck size={16}/>,
+color:"#2563eb"
+},
+
+moderator:{
+icon:<Shield size={16}/>,
+color:"#f59e0b"
+},
+
+admin:{
+icon:<Crown size={16}/>,
+color:"#dc2626"
+},
+
+teacher:{
+icon:<GraduationCap size={16}/>,
+color:"#7c3aed"
+},
+
+vip:{
+icon:<Star size={16}/>,
+color:"#d97706"
+},
+
+member:{
+icon:<UserRound size={16}/>,
+color:"#64748b"
+}
+
+};
+
+const item=
+badges[type] ||
+badges.member;
+
+return(
+
+<div
+style={{
+position:"relative",
+display:"inline-block"
+}}
+
+onMouseEnter={()=>
+setShow(true)
+}
+
+onMouseLeave={()=>
+setShow(false)
+}
+
+onClick={()=>
+setShow(!show)
+}
+
+>
+
+<div
+style={{
+display:"flex",
+alignItems:"center",
+justifyContent:"center",
+width:34,
+height:34,
+borderRadius:"999px",
+background:"white",
+color:item.color,
+
+boxShadow:
+`0 0 14px ${item.color}55`,
+
+cursor:"pointer",
+
+transition:
+"all .25s"
+}}
+>
+
+{item.icon}
+
+</div>
+
+{show && (
+
+<div
+style={{
+
+position:"absolute",
+
+top:"-42px",
+
+left:"50%",
+
+transform:
+"translateX(-50%)",
+
+background:"#0f172a",
+
+color:"white",
+
+padding:"6px 10px",
+
+borderRadius:"10px",
+
+fontSize:"12px",
+
+fontWeight:700,
+
+whiteSpace:"nowrap",
+
+zIndex:9999
+}}
+>
+
+{text[type]}
+
+</div>
+
+)}
+
+</div>
+
+)
+
 }
