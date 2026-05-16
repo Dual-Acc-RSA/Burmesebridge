@@ -7,8 +7,8 @@ import PostComposer from "@/components/forum/PostComposer";
 import PostCard from "@/components/forum/PostCard";
 
 type Profile = {
+  id?: string;
   display_name?: string | null;
-  email?: string | null;
   verified?: boolean | null;
   badge?: string | null;
   role?: string | null;
@@ -93,7 +93,8 @@ export default function ForumPage() {
 
   /**
    * 页面初始化：
-   * 获取当前登录用户，然后加载论坛数据。
+   * 1. 获取当前登录用户
+   * 2. 加载帖子、点赞、评论
    */
   async function loadUserAndPosts() {
     const {
@@ -107,26 +108,25 @@ export default function ForumPage() {
   }
 
   /**
-   * 加载帖子、点赞、评论。
-   * 关键点：
-   * profiles:profiles!posts_user_id_fkey
-   * 必须依赖 posts.user_id → profiles.id 外键。
+   * 加载论坛数据。
+   *
+   * 这里不直接查 profiles。
+   * 原因：
+   * profiles 受 RLS 限制，登录用户/游客可能只能看到自己的资料。
+   *
+   * 统一改查 public_profiles：
+   * - 只公开 display_name / verified / badge / role
+   * - 不公开 email
+   * - 所有人都可以读取发帖者公开身份
    */
   async function loadPosts(userId: string) {
-    const { data, error } = await supabase
+    const { data: postRows, error } = await supabase
       .from("posts")
       .select(`
         id,
         content,
         created_at,
-        user_id,
-        profiles:profiles!posts_user_id_fkey (
-          display_name,
-          email,
-          verified,
-          badge,
-          role
-        )
+        user_id
       `)
       .order("created_at", { ascending: false });
 
@@ -135,12 +135,42 @@ export default function ForumPage() {
       return;
     }
 
-    const postList = (data || []) as Post[];
+    const rawPosts = postRows || [];
+
+    const postUserIds = Array.from(
+      new Set(rawPosts.map((post) => post.user_id))
+    );
+
+    const { data: profileRows, error: profileError } = await supabase
+      .from("public_profiles")
+      .select(`
+        id,
+        display_name,
+        verified,
+        badge,
+        role
+      `)
+      .in("id", postUserIds);
+
+    if (profileError) {
+      alert(profileError.message);
+      return;
+    }
+
+    const profileMap = new Map(
+      (profileRows || []).map((profile) => [profile.id, profile])
+    );
+
+    const postList = rawPosts.map((post) => ({
+      ...post,
+      profiles: profileMap.get(post.user_id) || null,
+    })) as Post[];
+
     setPosts(postList);
 
-    const ids = postList.map((post) => post.id);
+    const postIds = postList.map((post) => post.id);
 
-    if (ids.length === 0) {
+    if (postIds.length === 0) {
       setLikes({});
       setMyLikes({});
       setComments({});
@@ -150,7 +180,7 @@ export default function ForumPage() {
     const { data: likeRows } = await supabase
       .from("post_likes")
       .select("post_id, user_id")
-      .in("post_id", ids);
+      .in("post_id", postIds);
 
     const likeCount: Record<number, number> = {};
     const likedByMe: Record<number, boolean> = {};
@@ -173,33 +203,55 @@ export default function ForumPage() {
         post_id,
         content,
         created_at,
-        user_id,
-        profiles:profiles!post_comments_user_id_fkey (
-          display_name,
-          email,
-          verified,
-          badge,
-          role
-        )
+        user_id
       `)
-      .in("post_id", ids)
+      .in("post_id", postIds)
       .order("created_at", { ascending: true });
+
+    const rawComments = commentRows || [];
+
+    const commentUserIds = Array.from(
+      new Set(rawComments.map((comment) => comment.user_id))
+    );
+
+    const { data: commentProfiles, error: commentProfileError } = await supabase
+      .from("public_profiles")
+      .select(`
+        id,
+        display_name,
+        verified,
+        badge,
+        role
+      `)
+      .in("id", commentUserIds);
+
+    if (commentProfileError) {
+      alert(commentProfileError.message);
+      return;
+    }
+
+    const commentProfileMap = new Map(
+      (commentProfiles || []).map((profile) => [profile.id, profile])
+    );
 
     const groupedComments: Record<number, any[]> = {};
 
-    commentRows?.forEach((comment) => {
+    rawComments.forEach((comment) => {
       if (!groupedComments[comment.post_id]) {
         groupedComments[comment.post_id] = [];
       }
 
-      groupedComments[comment.post_id].push(comment);
+      groupedComments[comment.post_id].push({
+        ...comment,
+        profiles: commentProfileMap.get(comment.user_id) || null,
+      });
     });
 
     setComments(groupedComments);
   }
 
   /**
-   * 创建新帖子。
+   * 创建新帖子
    */
   async function createPost() {
     const {
@@ -228,7 +280,7 @@ export default function ForumPage() {
   }
 
   /**
-   * 点赞 / 取消点赞。
+   * 点赞 / 取消点赞
    */
   async function toggleLike(postId: number) {
     if (!currentUserId) {
@@ -253,7 +305,7 @@ export default function ForumPage() {
   }
 
   /**
-   * 新增评论。
+   * 新增评论
    */
   async function createComment(postId: number) {
     if (!currentUserId) {
@@ -285,18 +337,14 @@ export default function ForumPage() {
   }
 
   /**
-   * 删除帖子。
-   * RLS 应限制：作者本人 / admin / moderator。
+   * 删除帖子
    */
   async function deletePost(postId: number) {
     const ok = confirm(t.confirmDelete);
 
     if (!ok) return;
 
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId);
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
 
     if (error) {
       alert(error.message);
@@ -307,7 +355,7 @@ export default function ForumPage() {
   }
 
   /**
-   * 分享帖子链接。
+   * 分享帖子链接
    */
   async function sharePost(postId: number) {
     const url = `${window.location.origin}/${locale}/forum#post-${postId}`;
