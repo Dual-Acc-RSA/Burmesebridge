@@ -6,12 +6,15 @@ import { supabase } from "@/lib/supabase";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
+type Category = "news" | "jobs" | "learn";
+
 type NewsItem = {
   id: number;
   title: string;
   content: string;
   locale: string | null;
   status: string | null;
+  category: Category | null;
   created_at: string;
 };
 
@@ -27,9 +30,54 @@ function NewsContent() {
   const params = useParams();
   const locale = String(params.locale || "my");
 
+  const text = {
+    my: {
+      pageTitle: "အချက်အလက် ထုတ်ပြန်ရန်",
+      titlePlaceholder: "ခေါင်းစဉ်ရေးပါ...",
+      contentPlaceholder: "အကြောင်းအရာရေးပါ...",
+      publish: "ထုတ်ပြန်ရန်",
+      delete: "ဖျက်ရန်",
+      confirmDelete: "ဒီအချက်အလက်ကို ဖျက်မှာ သေချာပါသလား?",
+      empty: "ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
+      category: "အမျိုးအစား",
+      news: "သတင်း",
+      jobs: "အလုပ်အကိုင်",
+      learn: "လေ့လာရန်",
+    },
+    zh: {
+      pageTitle: "发布信息",
+      titlePlaceholder: "填写标题...",
+      contentPlaceholder: "填写内容...",
+      publish: "发布",
+      delete: "删除",
+      confirmDelete: "确定要删除这条信息吗？",
+      empty: "暂无已发布信息",
+      category: "类型",
+      news: "新闻",
+      jobs: "工作信息",
+      learn: "学习内容",
+    },
+    en: {
+      pageTitle: "Publish",
+      titlePlaceholder: "Write title...",
+      contentPlaceholder: "Write content...",
+      publish: "Publish",
+      delete: "Delete",
+      confirmDelete: "Delete this item?",
+      empty: "No published items yet",
+      category: "Category",
+      news: "News",
+      jobs: "Jobs",
+      learn: "Learning",
+    },
+  };
+
+  const t = text[locale as keyof typeof text] || text.en;
+
   const [news, setNews] = useState<NewsItem[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [category, setCategory] = useState<Category>("news");
 
   useEffect(() => {
     loadNews();
@@ -38,7 +86,7 @@ function NewsContent() {
   async function loadNews() {
     const { data, error } = await supabase
       .from("news")
-      .select("id, title, content, locale, status, created_at")
+      .select("id, title, content, locale, status, category, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -46,7 +94,7 @@ function NewsContent() {
       return;
     }
 
-    setNews(data || []);
+    setNews((data || []) as NewsItem[]);
   }
 
   async function createNews() {
@@ -61,6 +109,7 @@ function NewsContent() {
       content: content.trim(),
       locale,
       status: "published",
+      category,
       author_id: user?.id || null,
     });
 
@@ -71,11 +120,12 @@ function NewsContent() {
 
     setTitle("");
     setContent("");
+    setCategory("news");
     await loadNews();
   }
 
   async function deleteNews(newsId: number) {
-    const ok = confirm("Delete this news?");
+    const ok = confirm(t.confirmDelete);
 
     if (!ok) return;
 
@@ -89,49 +139,136 @@ function NewsContent() {
     await loadNews();
   }
 
+  function getCategoryLabel(value: Category | null) {
+    if (value === "jobs") return t.jobs;
+    if (value === "learn") return t.learn;
+    return t.news;
+  }
+
+  function getCategoryStyle(value: Category | null) {
+    if (value === "jobs") {
+      return {
+        background: "#fff7ed",
+        color: "#c2410c",
+        border: "1px solid #fed7aa",
+      };
+    }
+
+    if (value === "learn") {
+      return {
+        background: "#f5f3ff",
+        color: "#6d28d9",
+        border: "1px solid #ddd6fe",
+      };
+    }
+
+    return {
+      background: "#eff6ff",
+      color: "#2563eb",
+      border: "1px solid #bfdbfe",
+    };
+  }
+
   return (
     <div className="adminShell">
       <AdminSidebar />
 
       <div className="adminContent">
-        <h1>News</h1>
+        <h1>{t.pageTitle}</h1>
 
         <div className="feedCard" style={{ marginTop: 24 }}>
+          <label style={label}>{t.category}</label>
+
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value as Category)}
+            style={select}
+          >
+            <option value="news">{t.news}</option>
+            <option value="jobs">{t.jobs}</option>
+            <option value="learn">{t.learn}</option>
+          </select>
+
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="News title"
+            placeholder={t.titlePlaceholder}
             style={input}
           />
 
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            placeholder="News content"
+            placeholder={t.contentPlaceholder}
             style={textarea}
           />
 
           <button onClick={createNews} style={button}>
-            Publish
+            {t.publish}
           </button>
         </div>
 
         <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
+          {news.length === 0 && (
+            <div className="feedCard" style={{ color: "#64748b" }}>
+              {t.empty}
+            </div>
+          )}
+
           {news.map((item) => (
             <div key={item.id} className="feedCard">
-              <h3>{item.title}</h3>
-              <p style={{ marginTop: 10, lineHeight: 1.8 }}>{item.content}</p>
-
-              <button
-                onClick={() => deleteNews(item.id)}
+              <div
                 style={{
-                  ...button,
-                  background: "#ef4444",
-                  marginTop: 14,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  marginBottom: 12,
+                  ...getCategoryStyle(item.category),
                 }}
               >
-                Delete
-              </button>
+                {getCategoryLabel(item.category)}
+              </div>
+
+              <h3>{item.title}</h3>
+
+              <p
+                style={{
+                  marginTop: 10,
+                  lineHeight: 1.8,
+                  whiteSpace: "pre-wrap",
+                  color: "#334155",
+                }}
+              >
+                {item.content}
+              </p>
+
+              <div
+                style={{
+                  marginTop: 14,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
+                  color: "#94a3b8",
+                  fontSize: 13,
+                }}
+              >
+                <span>{new Date(item.created_at).toLocaleString()}</span>
+
+                <button
+                  onClick={() => deleteNews(item.id)}
+                  style={{
+                    ...button,
+                    background: "#ef4444",
+                    padding: "8px 14px",
+                  }}
+                >
+                  {t.delete}
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -139,6 +276,23 @@ function NewsContent() {
     </div>
   );
 }
+
+const label = {
+  display: "block",
+  fontWeight: 800,
+  marginBottom: 8,
+  color: "#334155",
+};
+
+const select = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid #e2e8f0",
+  marginBottom: 12,
+  background: "white",
+  fontWeight: 700,
+};
 
 const input = {
   width: "100%",
