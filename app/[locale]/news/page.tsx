@@ -1,140 +1,198 @@
-export default async function NewsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+"use client";
 
-  const content = {
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
+type Category = "news" | "jobs" | "learn";
+
+type NewsItem = {
+  id: number;
+  title: string;
+  content: string;
+  locale: string | null;
+  status: string | null;
+  category: Category | null;
+  created_at: string;
+};
+
+export default function NewsPage() {
+  const params = useParams();
+  const locale = String(params.locale || "my");
+
+  const text = {
     my: {
-      title: "သတင်း",
-      subtitle: "ထိုင်း၊ မြန်မာ၊ အလုပ်သမား၊ ဗီဇာနှင့် စာရွက်စာတမ်းဆိုင်ရာ သတင်းများ",
-      news: [
-        {
-          title: "ထိုင်းအလုပ်သမား မူဝါဒသတင်း",
-          text: "မြန်မာအလုပ်သမားများအတွက် အလုပ်လုပ်ခွင့်၊ ဗီဇာနှင့် စာရွက်စာတမ်းဆိုင်ရာ အရေးကြီးသတင်းများ။",
-          meta: "အလုပ်သမားသတင်း · အရေးကြီး",
-        },
-        {
-          title: "ထိုင်းနိုင်ငံတွင် နေထိုင်မှုသတိပြုရန်",
-          text: "သွားလာရေး၊ ဆေးရုံ၊ အိမ်ငှားခြင်းနှင့် နေ့စဉ်ဘဝအတွက် အသုံးဝင်သော သတင်းများ။",
-          meta: "ဘဝသတင်း",
-        },
-        {
-          title: "တရုတ်စာလေ့လာရေး သတင်း",
-          text: "မြန်မာလူမျိုးများအတွက် တရုတ်စာလေ့လာရေး အရင်းအမြစ်များနှင့် လှုပ်ရှားမှုများ။",
-          meta: "သင်ယူရေးသတင်း",
-        },
-      ],
+      title: "သတင်းအချက်အလက်",
+      subtitle: "သတင်း၊ အလုပ်အကိုင် နှင့် လေ့လာရေး အချက်အလက်များ",
+      empty: "လက်ရှိ ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
+      news: "သတင်း",
+      jobs: "အလုပ်အကိုင်",
+      learn: "လေ့လာရန်",
+      lang: "ဘာသာစကား",
     },
-
     zh: {
-      title: "新闻资讯",
-      subtitle: "泰国、缅甸、劳工、签证、证件和生活相关资讯",
-      news: [
-        {
-          title: "泰国劳工政策更新",
-          text: "这里以后发布与缅甸劳工、工作证、签证相关的重要信息。",
-          meta: "劳工资讯 · 重要",
-        },
-        {
-          title: "缅甸人在泰生活提醒",
-          text: "交通、医院、租房、证件办理等生活信息分享。",
-          meta: "生活资讯",
-        },
-        {
-          title: "中文学习资源更新",
-          text: "适合缅甸学习者关注的中文学习资源与活动。",
-          meta: "学习资讯",
-        },
-      ],
+      title: "信息中心",
+      subtitle: "新闻、工作信息和学习内容",
+      empty: "暂无发布内容",
+      news: "新闻",
+      jobs: "工作信息",
+      learn: "学习内容",
+      lang: "语言",
     },
-
     en: {
-      title: "News",
-      subtitle: "Thailand, Myanmar, labor, visa, document and daily life information",
-      news: [
-        {
-          title: "Thailand Labor Policy Updates",
-          text: "Important updates about work permits, visas and documents for Burmese workers.",
-          meta: "Labor News · Important",
-        },
-        {
-          title: "Life in Thailand Reminders",
-          text: "Useful information about transport, hospitals, rent and daily life.",
-          meta: "Life News",
-        },
-        {
-          title: "Chinese Learning Resources",
-          text: "Learning resources and activities for Burmese Chinese learners.",
-          meta: "Learning News",
-        },
-      ],
+      title: "Information Center",
+      subtitle: "News, jobs, and learning updates",
+      empty: "No published content yet",
+      news: "News",
+      jobs: "Jobs",
+      learn: "Learning",
+      lang: "Language",
     },
   };
 
-  const t = content[locale as keyof typeof content] || content.en;
+  const t = text[locale as keyof typeof text] || text.en;
+
+  const [items, setItems] = useState<NewsItem[]>([]);
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  async function loadItems() {
+    const { data, error } = await supabase
+      .from("news")
+      .select("id, title, content, locale, status, category, created_at")
+      .eq("status", "published")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setItems((data || []) as NewsItem[]);
+  }
+
+  function getCategoryLabel(category: Category | null) {
+    if (category === "jobs") return t.jobs;
+    if (category === "learn") return t.learn;
+    return t.news;
+  }
+
+  function getCategoryStyle(category: Category | null) {
+    if (category === "jobs") {
+      return {
+        background: "#fff7ed",
+        color: "#c2410c",
+        border: "1px solid #fed7aa",
+      };
+    }
+
+    if (category === "learn") {
+      return {
+        background: "#f5f3ff",
+        color: "#6d28d9",
+        border: "1px solid #ddd6fe",
+      };
+    }
+
+    return {
+      background: "#eff6ff",
+      color: "#2563eb",
+      border: "1px solid #bfdbfe",
+    };
+  }
 
   return (
-    <main
-      style={{
-        padding: "48px 24px",
-        background: "#f8fafc",
-        minHeight: "100vh",
-      }}
-    >
-      <section
+    <main className="feedShell">
+      <h1 className="feedTitle">{t.title}</h1>
+
+      <p
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
+          color: "#64748b",
+          fontSize: 18,
+          marginBottom: 28,
+          lineHeight: 1.8,
         }}
       >
-        <h1 style={{ fontSize: "48px", marginBottom: "14px" }}>
-          {t.title}
-        </h1>
+        {t.subtitle}
+      </p>
 
-        <p
-          style={{
-            color: "#64748b",
-            fontSize: "20px",
-            lineHeight: 1.8,
-            marginBottom: "36px",
-          }}
-        >
-          {t.subtitle}
-        </p>
+      <div style={{ display: "grid", gap: 18 }}>
+        {items.length === 0 && (
+          <div className="feedCard" style={{ color: "#64748b" }}>
+            {t.empty}
+          </div>
+        )}
 
-        <div style={{ display: "grid", gap: "20px" }}>
-          {t.news.map((item, index) => (
-            <article
-              key={index}
+        {items.map((item) => (
+          <article
+            key={item.id}
+            className="feedCard"
+            style={{
+              padding: 28,
+            }}
+          >
+            <div
               style={{
-                background: "white",
-                padding: "30px",
-                borderRadius: "22px",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "7px 12px",
+                borderRadius: 999,
+                fontSize: 13,
+                fontWeight: 800,
+                marginBottom: 18,
+                ...getCategoryStyle(item.category),
               }}
             >
-              <h2 style={{ fontSize: "30px", marginBottom: "14px" }}>
-                {item.title}
-              </h2>
+              {getCategoryLabel(item.category)}
+            </div>
 
-              <p
-                style={{
-                  color: "#475569",
-                  lineHeight: 1.9,
-                  fontSize: "18px",
-                }}
-              >
-                {item.text}
-              </p>
+            <h2
+              style={{
+                fontSize: 30,
+                marginBottom: 14,
+                color: "#0f172a",
+              }}
+            >
+              {item.title}
+            </h2>
 
-              <small style={{ color: "#64748b" }}>{item.meta}</small>
-            </article>
-          ))}
-        </div>
-      </section>
+            <p
+              style={{
+                color: "#334155",
+                lineHeight: 1.9,
+                whiteSpace: "pre-wrap",
+                fontSize: 17,
+              }}
+            >
+              {item.content}
+            </p>
+
+            <div
+              style={{
+                marginTop: 22,
+                paddingTop: 16,
+                borderTop: "1px solid #e2e8f0",
+                color: "#94a3b8",
+                fontSize: 14,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <span>{new Date(item.created_at).toLocaleString()}</span>
+
+              {item.locale && (
+                <span>
+                  {t.lang}: {item.locale}
+                </span>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
     </main>
   );
 }
