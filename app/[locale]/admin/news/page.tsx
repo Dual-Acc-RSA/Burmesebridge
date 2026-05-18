@@ -32,6 +32,10 @@ function NewsContent() {
   const params = useParams();
   const locale = String(params.locale || "my");
 
+  /**
+   * 页面文字三语配置。
+   * 所有按钮、提示、标题都从这里取，避免硬编码英文。
+   */
   const text = {
     my: {
       pageTitle: "အချက်အလက် ထုတ်ပြန်ရန်",
@@ -45,9 +49,12 @@ function NewsContent() {
       contentMy: "မြန်မာ အကြောင်းအရာ",
       contentZh: "中文内容",
       contentEn: "English Content",
+      generateDraft: "ဘာသာစကား ၃ မျိုး မူကြမ်းထုတ်ရန်",
       publish: "ထုတ်ပြန်ရန်",
       delete: "ဖျက်ရန်",
       empty: "ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
+      missingDraftSource: "ဘာသာစကားတစ်မျိုး၏ ခေါင်းစဉ်နှင့် အကြောင်းအရာကို အရင်ဖြည့်ပါ",
+      draftFailed: "မူကြမ်းထုတ်ရာတွင် မအောင်မြင်ပါ",
       confirmDelete: "ဒီအချက်အလက်ကို ဖျက်မှာ သေချာပါသလား?",
     },
     zh: {
@@ -62,9 +69,12 @@ function NewsContent() {
       contentMy: "缅语内容",
       contentZh: "中文内容",
       contentEn: "英文内容",
+      generateDraft: "生成三语草稿",
       publish: "发布",
       delete: "删除",
       empty: "暂无已发布信息",
+      missingDraftSource: "请先填写任意一种语言的标题和内容",
+      draftFailed: "生成失败",
       confirmDelete: "确定要删除这条信息吗？",
     },
     en: {
@@ -79,9 +89,12 @@ function NewsContent() {
       contentMy: "Myanmar Content",
       contentZh: "Chinese Content",
       contentEn: "English Content",
+      generateDraft: "Generate trilingual draft",
       publish: "Publish",
       delete: "Delete",
       empty: "No published items yet",
+      missingDraftSource: "Please fill in one language title and content first",
+      draftFailed: "Failed to generate draft",
       confirmDelete: "Delete this item?",
     },
   };
@@ -103,6 +116,10 @@ function NewsContent() {
     loadItems();
   }, []);
 
+  /**
+   * 读取已发布的信息列表。
+   * 这里只读取后台管理需要显示的字段。
+   */
   async function loadItems() {
     const { data, error } = await supabase
       .from("news")
@@ -119,6 +136,58 @@ function NewsContent() {
     setItems((data || []) as NewsItem[]);
   }
 
+  /**
+   * 生成三语草稿。
+   *
+   * 当前阶段：
+   * - 调用 /api/admin/translate-news
+   * - 该 API 目前只是安全骨架，会把原文复制到三语字段
+   *
+   * 后续阶段：
+   * - 在 API 内接入真正 AI 翻译/本地化服务
+   * - 前端这里不用再大改
+   */
+  async function generateDraft() {
+    const sourceTitle = titleMy || titleZh || titleEn;
+    const sourceContent = contentMy || contentZh || contentEn;
+
+    if (!sourceTitle.trim() || !sourceContent.trim()) {
+      alert(t.missingDraftSource);
+      return;
+    }
+
+    const response = await fetch("/api/admin/translate-news", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: sourceTitle,
+        content: sourceContent,
+        sourceLanguage: locale,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      alert(result.message || t.draftFailed);
+      return;
+    }
+
+    setTitleMy(result.data.title_my || sourceTitle);
+    setTitleZh(result.data.title_zh || sourceTitle);
+    setTitleEn(result.data.title_en || sourceTitle);
+
+    setContentMy(result.data.content_my || sourceContent);
+    setContentZh(result.data.content_zh || sourceContent);
+    setContentEn(result.data.content_en || sourceContent);
+  }
+
+  /**
+   * 发布信息。
+   * 如果某种语言没填，会用已有语言做 fallback，避免前台空白。
+   */
   async function createNews() {
     if (!titleMy.trim() && !titleZh.trim() && !titleEn.trim()) return;
     if (!contentMy.trim() && !contentZh.trim() && !contentEn.trim()) return;
@@ -165,6 +234,9 @@ function NewsContent() {
     await loadItems();
   }
 
+  /**
+   * 删除发布信息。
+   */
   async function deleteNews(newsId: number) {
     const ok = confirm(t.confirmDelete);
     if (!ok) return;
@@ -179,6 +251,9 @@ function NewsContent() {
     await loadItems();
   }
 
+  /**
+   * 根据分类显示当前语言标签。
+   */
   function getCategoryLabel(value: Category | null) {
     if (value === "jobs") return t.jobs;
     if (value === "learn") return t.learn;
@@ -205,18 +280,66 @@ function NewsContent() {
             <option value="learn">{t.learn}</option>
           </select>
 
-          <input value={titleMy} onChange={(e) => setTitleMy(e.target.value)} placeholder={t.titleMy} style={input} />
-          <textarea value={contentMy} onChange={(e) => setContentMy(e.target.value)} placeholder={t.contentMy} style={textarea} />
+          <input
+            value={titleMy}
+            onChange={(event) => setTitleMy(event.target.value)}
+            placeholder={t.titleMy}
+            style={input}
+          />
 
-          <input value={titleZh} onChange={(e) => setTitleZh(e.target.value)} placeholder={t.titleZh} style={input} />
-          <textarea value={contentZh} onChange={(e) => setContentZh(e.target.value)} placeholder={t.contentZh} style={textarea} />
+          <textarea
+            value={contentMy}
+            onChange={(event) => setContentMy(event.target.value)}
+            placeholder={t.contentMy}
+            style={textarea}
+          />
 
-          <input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} placeholder={t.titleEn} style={input} />
-          <textarea value={contentEn} onChange={(e) => setContentEn(e.target.value)} placeholder={t.contentEn} style={textarea} />
+          <input
+            value={titleZh}
+            onChange={(event) => setTitleZh(event.target.value)}
+            placeholder={t.titleZh}
+            style={input}
+          />
 
-          <button onClick={createNews} style={button}>
-            {t.publish}
-          </button>
+          <textarea
+            value={contentZh}
+            onChange={(event) => setContentZh(event.target.value)}
+            placeholder={t.contentZh}
+            style={textarea}
+          />
+
+          <input
+            value={titleEn}
+            onChange={(event) => setTitleEn(event.target.value)}
+            placeholder={t.titleEn}
+            style={input}
+          />
+
+          <textarea
+            value={contentEn}
+            onChange={(event) => setContentEn(event.target.value)}
+            placeholder={t.contentEn}
+            style={textarea}
+          />
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+            type="button"
+              onClick={generateDraft}
+              style={{
+                ...button,
+                background: "#7c3aed",
+              }}
+            >
+              {t.generateDraft}
+            </button>
+
+            <button
+            type="button" 
+            onClick={createNews} style={button}>
+              {t.publish}
+            </button>
+          </div>
         </div>
 
         <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
@@ -225,13 +348,18 @@ function NewsContent() {
           {items.map((item) => (
             <div key={item.id} className="feedCard">
               <strong>{getCategoryLabel(item.category)}</strong>
+
               <h3 style={{ marginTop: 10 }}>
                 {item.title_my || item.title_zh || item.title_en}
               </h3>
 
               <button
                 onClick={() => deleteNews(item.id)}
-                style={{ ...button, background: "#ef4444", marginTop: 14 }}
+                style={{
+                  ...button,
+                  background: "#ef4444",
+                  marginTop: 14,
+                }}
               >
                 {t.delete}
               </button>
