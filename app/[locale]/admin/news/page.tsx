@@ -10,11 +10,13 @@ type Category = "news" | "jobs" | "learn";
 
 type NewsItem = {
   id: number;
-  title: string;
-  content: string;
-  locale: string | null;
-  status: string | null;
   category: Category | null;
+  title_my: string | null;
+  title_zh: string | null;
+  title_en: string | null;
+  content_my: string | null;
+  content_zh: string | null;
+  content_en: string | null;
   created_at: string;
 };
 
@@ -33,60 +35,80 @@ function NewsContent() {
   const text = {
     my: {
       pageTitle: "အချက်အလက် ထုတ်ပြန်ရန်",
-      titlePlaceholder: "ခေါင်းစဉ်ရေးပါ...",
-      contentPlaceholder: "အကြောင်းအရာရေးပါ...",
-      publish: "ထုတ်ပြန်ရန်",
-      delete: "ဖျက်ရန်",
-      confirmDelete: "ဒီအချက်အလက်ကို ဖျက်မှာ သေချာပါသလား?",
-      empty: "ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
       category: "အမျိုးအစား",
       news: "သတင်း",
       jobs: "အလုပ်အကိုင်",
       learn: "လေ့လာရန်",
+      titleMy: "မြန်မာ ခေါင်းစဉ်",
+      titleZh: "中文标题",
+      titleEn: "English Title",
+      contentMy: "မြန်မာ အကြောင်းအရာ",
+      contentZh: "中文内容",
+      contentEn: "English Content",
+      publish: "ထုတ်ပြန်ရန်",
+      delete: "ဖျက်ရန်",
+      empty: "ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
+      confirmDelete: "ဒီအချက်အလက်ကို ဖျက်မှာ သေချာပါသလား?",
     },
     zh: {
       pageTitle: "发布信息",
-      titlePlaceholder: "填写标题...",
-      contentPlaceholder: "填写内容...",
-      publish: "发布",
-      delete: "删除",
-      confirmDelete: "确定要删除这条信息吗？",
-      empty: "暂无已发布信息",
       category: "类型",
       news: "新闻",
       jobs: "工作信息",
       learn: "学习内容",
+      titleMy: "缅语标题",
+      titleZh: "中文标题",
+      titleEn: "英文标题",
+      contentMy: "缅语内容",
+      contentZh: "中文内容",
+      contentEn: "英文内容",
+      publish: "发布",
+      delete: "删除",
+      empty: "暂无已发布信息",
+      confirmDelete: "确定要删除这条信息吗？",
     },
     en: {
       pageTitle: "Publish",
-      titlePlaceholder: "Write title...",
-      contentPlaceholder: "Write content...",
-      publish: "Publish",
-      delete: "Delete",
-      confirmDelete: "Delete this item?",
-      empty: "No published items yet",
       category: "Category",
       news: "News",
       jobs: "Jobs",
       learn: "Learning",
+      titleMy: "Myanmar Title",
+      titleZh: "Chinese Title",
+      titleEn: "English Title",
+      contentMy: "Myanmar Content",
+      contentZh: "Chinese Content",
+      contentEn: "English Content",
+      publish: "Publish",
+      delete: "Delete",
+      empty: "No published items yet",
+      confirmDelete: "Delete this item?",
     },
   };
 
   const t = text[locale as keyof typeof text] || text.en;
 
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [items, setItems] = useState<NewsItem[]>([]);
   const [category, setCategory] = useState<Category>("news");
 
+  const [titleMy, setTitleMy] = useState("");
+  const [titleZh, setTitleZh] = useState("");
+  const [titleEn, setTitleEn] = useState("");
+
+  const [contentMy, setContentMy] = useState("");
+  const [contentZh, setContentZh] = useState("");
+  const [contentEn, setContentEn] = useState("");
+
   useEffect(() => {
-    loadNews();
+    loadItems();
   }, []);
 
-  async function loadNews() {
+  async function loadItems() {
     const { data, error } = await supabase
       .from("news")
-      .select("id, title, content, locale, status, category, created_at")
+      .select(
+        "id, category, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -94,23 +116,37 @@ function NewsContent() {
       return;
     }
 
-    setNews((data || []) as NewsItem[]);
+    setItems((data || []) as NewsItem[]);
   }
 
   async function createNews() {
-    if (!title.trim() || !content.trim()) return;
+    if (!titleMy.trim() && !titleZh.trim() && !titleEn.trim()) return;
+    if (!contentMy.trim() && !contentZh.trim() && !contentEn.trim()) return;
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
+    const fallbackTitle = titleMy || titleZh || titleEn;
+    const fallbackContent = contentMy || contentZh || contentEn;
+
     const { error } = await supabase.from("news").insert({
-      title: title.trim(),
-      content: content.trim(),
+      category,
       locale,
       status: "published",
-      category,
+      source_language: locale,
       author_id: user?.id || null,
+
+      title: fallbackTitle,
+      content: fallbackContent,
+
+      title_my: titleMy || fallbackTitle,
+      title_zh: titleZh || fallbackTitle,
+      title_en: titleEn || fallbackTitle,
+
+      content_my: contentMy || fallbackContent,
+      content_zh: contentZh || fallbackContent,
+      content_en: contentEn || fallbackContent,
     });
 
     if (error) {
@@ -118,15 +154,19 @@ function NewsContent() {
       return;
     }
 
-    setTitle("");
-    setContent("");
     setCategory("news");
-    await loadNews();
+    setTitleMy("");
+    setTitleZh("");
+    setTitleEn("");
+    setContentMy("");
+    setContentZh("");
+    setContentEn("");
+
+    await loadItems();
   }
 
   async function deleteNews(newsId: number) {
     const ok = confirm(t.confirmDelete);
-
     if (!ok) return;
 
     const { error } = await supabase.from("news").delete().eq("id", newsId);
@@ -136,37 +176,13 @@ function NewsContent() {
       return;
     }
 
-    await loadNews();
+    await loadItems();
   }
 
   function getCategoryLabel(value: Category | null) {
     if (value === "jobs") return t.jobs;
     if (value === "learn") return t.learn;
     return t.news;
-  }
-
-  function getCategoryStyle(value: Category | null) {
-    if (value === "jobs") {
-      return {
-        background: "#fff7ed",
-        color: "#c2410c",
-        border: "1px solid #fed7aa",
-      };
-    }
-
-    if (value === "learn") {
-      return {
-        background: "#f5f3ff",
-        color: "#6d28d9",
-        border: "1px solid #ddd6fe",
-      };
-    }
-
-    return {
-      background: "#eff6ff",
-      color: "#2563eb",
-      border: "1px solid #bfdbfe",
-    };
   }
 
   return (
@@ -182,26 +198,21 @@ function NewsContent() {
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value as Category)}
-            style={select}
+            style={input}
           >
             <option value="news">{t.news}</option>
             <option value="jobs">{t.jobs}</option>
             <option value="learn">{t.learn}</option>
           </select>
 
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={t.titlePlaceholder}
-            style={input}
-          />
+          <input value={titleMy} onChange={(e) => setTitleMy(e.target.value)} placeholder={t.titleMy} style={input} />
+          <textarea value={contentMy} onChange={(e) => setContentMy(e.target.value)} placeholder={t.contentMy} style={textarea} />
 
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            placeholder={t.contentPlaceholder}
-            style={textarea}
-          />
+          <input value={titleZh} onChange={(e) => setTitleZh(e.target.value)} placeholder={t.titleZh} style={input} />
+          <textarea value={contentZh} onChange={(e) => setContentZh(e.target.value)} placeholder={t.contentZh} style={textarea} />
+
+          <input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} placeholder={t.titleEn} style={input} />
+          <textarea value={contentEn} onChange={(e) => setContentEn(e.target.value)} placeholder={t.contentEn} style={textarea} />
 
           <button onClick={createNews} style={button}>
             {t.publish}
@@ -209,66 +220,21 @@ function NewsContent() {
         </div>
 
         <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
-          {news.length === 0 && (
-            <div className="feedCard" style={{ color: "#64748b" }}>
-              {t.empty}
-            </div>
-          )}
+          {items.length === 0 && <div className="feedCard">{t.empty}</div>}
 
-          {news.map((item) => (
+          {items.map((item) => (
             <div key={item.id} className="feedCard">
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  marginBottom: 12,
-                  ...getCategoryStyle(item.category),
-                }}
+              <strong>{getCategoryLabel(item.category)}</strong>
+              <h3 style={{ marginTop: 10 }}>
+                {item.title_my || item.title_zh || item.title_en}
+              </h3>
+
+              <button
+                onClick={() => deleteNews(item.id)}
+                style={{ ...button, background: "#ef4444", marginTop: 14 }}
               >
-                {getCategoryLabel(item.category)}
-              </div>
-
-              <h3>{item.title}</h3>
-
-              <p
-                style={{
-                  marginTop: 10,
-                  lineHeight: 1.8,
-                  whiteSpace: "pre-wrap",
-                  color: "#334155",
-                }}
-              >
-                {item.content}
-              </p>
-
-              <div
-                style={{
-                  marginTop: 14,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "center",
-                  color: "#94a3b8",
-                  fontSize: 13,
-                }}
-              >
-                <span>{new Date(item.created_at).toLocaleString()}</span>
-
-                <button
-                  onClick={() => deleteNews(item.id)}
-                  style={{
-                    ...button,
-                    background: "#ef4444",
-                    padding: "8px 14px",
-                  }}
-                >
-                  {t.delete}
-                </button>
-              </div>
+                {t.delete}
+              </button>
             </div>
           ))}
         </div>
@@ -281,17 +247,6 @@ const label = {
   display: "block",
   fontWeight: 800,
   marginBottom: 8,
-  color: "#334155",
-};
-
-const select = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: 14,
-  border: "1px solid #e2e8f0",
-  marginBottom: 12,
-  background: "white",
-  fontWeight: 700,
 };
 
 const input = {
@@ -304,7 +259,7 @@ const input = {
 
 const textarea = {
   width: "100%",
-  minHeight: 140,
+  minHeight: 110,
   padding: "12px 14px",
   borderRadius: 14,
   border: "1px solid #e2e8f0",

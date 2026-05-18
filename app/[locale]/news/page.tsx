@@ -8,11 +8,13 @@ type Category = "news" | "jobs" | "learn";
 
 type NewsItem = {
   id: number;
-  title: string;
-  content: string;
-  locale: string | null;
-  status: string | null;
   category: Category | null;
+  title_my: string | null;
+  title_zh: string | null;
+  title_en: string | null;
+  content_my: string | null;
+  content_zh: string | null;
+  content_en: string | null;
   created_at: string;
 };
 
@@ -28,7 +30,6 @@ export default function NewsPage() {
       news: "သတင်း",
       jobs: "အလုပ်အကိုင်",
       learn: "လေ့လာရန်",
-      lang: "ဘာသာစကား",
     },
     zh: {
       title: "信息中心",
@@ -37,7 +38,6 @@ export default function NewsPage() {
       news: "新闻",
       jobs: "工作信息",
       learn: "学习内容",
-      lang: "语言",
     },
     en: {
       title: "Information Center",
@@ -46,7 +46,6 @@ export default function NewsPage() {
       news: "News",
       jobs: "Jobs",
       learn: "Learning",
-      lang: "Language",
     },
   };
 
@@ -61,7 +60,9 @@ export default function NewsPage() {
   async function loadItems() {
     const { data, error } = await supabase
       .from("news")
-      .select("id, title, content, locale, status, category, created_at")
+      .select(
+        "id, category, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
+      )
       .eq("status", "published")
       .order("created_at", { ascending: false });
 
@@ -71,6 +72,30 @@ export default function NewsPage() {
     }
 
     setItems((data || []) as NewsItem[]);
+  }
+
+  function getTitle(item: NewsItem) {
+    if (locale === "zh") {
+      return item.title_zh || item.title_my || item.title_en || "";
+    }
+
+    if (locale === "en") {
+      return item.title_en || item.title_my || item.title_zh || "";
+    }
+
+    return item.title_my || item.title_zh || item.title_en || "";
+  }
+
+  function getContent(item: NewsItem) {
+    if (locale === "zh") {
+      return item.content_zh || item.content_my || item.content_en || "";
+    }
+
+    if (locale === "en") {
+      return item.content_en || item.content_my || item.content_zh || "";
+    }
+
+    return item.content_my || item.content_zh || item.content_en || "";
   }
 
   function getCategoryLabel(category: Category | null) {
@@ -126,13 +151,7 @@ export default function NewsPage() {
         )}
 
         {items.map((item) => (
-          <article
-            key={item.id}
-            className="feedCard"
-            style={{
-              padding: 28,
-            }}
-          >
+          <article key={item.id} className="feedCard" style={{ padding: 28 }}>
             <div
               style={{
                 display: "inline-flex",
@@ -155,7 +174,7 @@ export default function NewsPage() {
                 color: "#0f172a",
               }}
             >
-              {item.title}
+              {getTitle(item)}
             </h2>
 
             <p
@@ -166,7 +185,7 @@ export default function NewsPage() {
                 fontSize: 17,
               }}
             >
-              {item.content}
+              {getContent(item)}
             </p>
 
             <div
@@ -176,19 +195,9 @@ export default function NewsPage() {
                 borderTop: "1px solid #e2e8f0",
                 color: "#94a3b8",
                 fontSize: 14,
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
               }}
             >
-              <span>{new Date(item.created_at).toLocaleString()}</span>
-
-              {item.locale && (
-                <span>
-                  {t.lang}: {item.locale}
-                </span>
-              )}
+              {new Date(item.created_at).toLocaleString()}
             </div>
           </article>
         ))}
