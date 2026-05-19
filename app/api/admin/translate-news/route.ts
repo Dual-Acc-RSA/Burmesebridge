@@ -1,20 +1,17 @@
 import { NextResponse } from "next/server";
 
-type TranslationResult = {
-  title_my: string;
-  title_zh: string;
-  title_en: string;
-  content_my: string;
-  content_zh: string;
-  content_en: string;
-};
-
-const FREE_MODELS = [
-  "qwen/qwen3-next-80b-a3b-instruct:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "google/gemma-4-27b-it:free",
-];
-
+/**
+ * Admin News Translation API
+ *
+ * 使用 Azure Translator 生成 my / zh / en 三语草稿。
+ *
+ * 保护规则：
+ * - Azure 正常：返回翻译
+ * - Azure 失败：返回原文
+ * - Key 缺失：返回原文
+ * - 网络失败：返回原文
+ * - 不影响登录 / 签到 / 语言切换 / Admin / Forum
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -25,172 +22,101 @@ export async function POST(request: Request) {
 
     if (!title || !content) {
       return NextResponse.json(
-        { success: false, message: "Missing title or content" },
+        {
+          success: false,
+          message: "Missing title or content",
+        },
         { status: 400 }
       );
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const key = process.env.AZURE_TRANSLATOR_KEY;
+    const region = process.env.AZURE_TRANSLATOR_REGION;
 
-    if (!apiKey) {
-      return fallbackResponse(sourceLanguage, title, content, "Missing API key");
-    }
-
-    const preferredModel = process.env.OPENROUTER_MODEL;
-    const models = preferredModel
-      ? [preferredModel, ...FREE_MODELS.filter((m) => m !== preferredModel)]
-      : FREE_MODELS;
-
-    for (const model of models) {
-      const result = await tryTranslateWithModel({
-        apiKey,
-        model,
+    if (!key || !region) {
+      return fallbackResponse(
         sourceLanguage,
         title,
         content,
-      });
+        "Azure config missing"
+      );
+    }
 
-      if (result.ok) {
-        return NextResponse.json({
-          success: true,
-          model,
-          data: {
-            sourceLanguage,
-            ...result.data,
+    async function translate(text: string, to: string) {
+      try {
+        const endpoint =
+          `https://api.cognitive.microsofttranslator.com/translate` +
+          `?api-version=3.0&to=${to}`;
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Ocp-Apim-Subscription-Key": key!,
+            "Ocp-Apim-Subscription-Region": region!,
+            "Content-Type": "application/json; charset=utf-8",
           },
+          body: JSON.stringify([{ text }]),
         });
+
+        if (!response.ok) {
+          console.log("Azure translate error:", await response.text());
+          return text;
+        }
+
+        const data = await response.json();
+
+        return data?.[0]?.translations?.[0]?.text || text;
+      } catch (error) {
+        console.log("Azure translate failed:", error);
+        return text;
       }
     }
 
-    return fallbackResponse(
-      sourceLanguage,
-      title,
-      content,
-      "All free models failed or were rate-limited"
-    );
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error?.message || "Translate API error",
+    const [titleMy, titleEn, contentMy, contentEn] = await Promise.all([
+      translate(title, "my"),
+      translate(title, "en"),
+      translate(content, "my"),
+      translate(content, "en"),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      provider: "azure",
+      data: {
+        sourceLanguage,
+
+        title_my: titleMy,
+        title_zh: title,
+        title_en: titleEn,
+
+        content_my: contentMy,
+        content_zh: content,
+        content_en: contentEn,
       },
-      { status: 500 }
-    );
+    });
+  } catch (error) {
+    console.log("Translate route error:", error);
+
+    return NextResponse.json({
+      success: true,
+      fallback: true,
+      reason: "Translate route failed",
+      data: {
+        sourceLanguage: "auto",
+        title_my: "",
+        title_zh: "",
+        title_en: "",
+        content_my: "",
+        content_zh: "",
+        content_en: "",
+      },
+    });
   }
 }
 
-async function tryTranslateWithModel({
-  apiKey,
-  model,
-  sourceLanguage,
-  title,
-  content,
-}: {
-  apiKey: string;
-  model: string;
-  sourceLanguage: string;
-  title: string;
-  content: string;
-}): Promise<{ ok: true; data: TranslationResult } | { ok: false }> {
-  try {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://burmesebridge.eu.cc",
-          "X-OpenRouter-Title": "BurmeseBridge",
-        },
-        body: JSON.stringify({
-          model,
-          temperature: 0.3,
-          max_tokens: 1800,
-          messages: [
-            {
-              role: "system",
-              content: `
-You are a professional Chinese-Burmese-English localization editor for BurmeseBridge.
-
-Return JSON only. No markdown. No explanation.
-
-Required JSON format:
-{
-  "title_my": "",
-  "title_zh": "",
-  "title_en": "",
-  "content_my": "",
-  "content_zh": "",
-  "content_en": ""
-}
-
-Burmese requirements:
-Use natural Myanmar Facebook / Telegram style.
-Use real Myanmar internet expressions.
-Use labor, education, community, visa, learning and job terms commonly used in Myanmar.
-Avoid textbook Burmese.
-Avoid direct Chinese translation.
-Avoid Chinese-style Burmese.
-Avoid awkward AI wording.
-Avoid unnecessary English mixing.
-Keep meaning accurate.
-`,
-            },
-            {
-              role: "user",
-              content: `
-Source language: ${sourceLanguage}
-
-Title:
-${title}
-
-Content:
-${content}
-
-Translate and localize into Burmese(my), Chinese(zh), and English(en).
-Return JSON only.
-`,
-            },
-          ],
-        }),
-      }
-    );
-
-    if (!response.ok) return { ok: false };
-
-    const result = await response.json();
-    const raw = result?.choices?.[0]?.message?.content;
-
-    if (!raw) return { ok: false };
-
-    const cleaned = raw
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const parsed = JSON.parse(cleaned);
-
-    if (
-      !parsed.title_my ||
-      !parsed.title_zh ||
-      !parsed.title_en ||
-      !parsed.content_my ||
-      !parsed.content_zh ||
-      !parsed.content_en
-    ) {
-      return { ok: false };
-    }
-
-    return {
-      ok: true,
-      data: parsed,
-    };
-  } catch {
-    return { ok: false };
-  }
-}
-
+/**
+ * Azure 不可用时返回原文，保证后台页面不坏。
+ */
 function fallbackResponse(
   sourceLanguage: string,
   title: string,
@@ -203,9 +129,11 @@ function fallbackResponse(
     reason,
     data: {
       sourceLanguage,
+
       title_my: title,
       title_zh: title,
       title_en: title,
+
       content_my: content,
       content_zh: content,
       content_en: content,
