@@ -366,9 +366,45 @@ export default function ForumPage() {
   }
 
   return (
-    <main className="feedShell">
-      <h1 className="feedTitle">{t.title}</h1>
+  <main className="feedShell">
+    <h1 className="feedTitle">{t.title}</h1>
 
+    <div style={{ marginTop: 24, display: "grid", gap: 18 }}>
+      {posts.map((post) => (
+        <PostCard
+          key={post.id}
+          post={post}
+          currentUserId={currentUserId}
+          likesCount={likes[post.id] || 0}
+          commentsCount={comments[post.id]?.length || 0}
+          liked={!!myLikes[post.id]}
+          comments={comments[post.id] || []}
+          commentText={commentText[post.id] || ""}
+          labels={{
+            anonymous: t.anonymous,
+            like: t.like,
+            liked: t.liked,
+            comment: t.comment,
+            share: t.share,
+            delete: t.delete,
+            commentPlaceholder: t.commentPlaceholder,
+            send: t.send,
+          }}
+          onLike={toggleLike}
+          onShare={sharePost}
+          onDelete={deletePost}
+          onCommentChange={(postId, value) =>
+            setCommentText({
+              ...commentText,
+              [postId]: value,
+            })
+          }
+          onSubmitComment={createComment}
+        />
+      ))}
+    </div>
+
+    <div style={{ marginTop: 24 }}>
       <PostComposer
         content={content}
         placeholder={t.placeholder}
@@ -376,41 +412,7 @@ export default function ForumPage() {
         onContentChange={setContent}
         onSubmit={createPost}
       />
-
-      <div style={{ marginTop: 24, display: "grid", gap: 18 }}>
-        {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            currentUserId={currentUserId}
-            likesCount={likes[post.id] || 0}
-            commentsCount={comments[post.id]?.length || 0}
-            liked={!!myLikes[post.id]}
-            comments={comments[post.id] || []}
-            commentText={commentText[post.id] || ""}
-            labels={{
-              anonymous: t.anonymous,
-              like: t.like,
-              liked: t.liked,
-              comment: t.comment,
-              share: t.share,
-              delete: t.delete,
-              commentPlaceholder: t.commentPlaceholder,
-              send: t.send,
-            }}
-            onLike={toggleLike}
-            onShare={sharePost}
-            onDelete={deletePost}
-            onCommentChange={(postId, value) =>
-              setCommentText({
-                ...commentText,
-                [postId]: value,
-              })
-            }
-            onSubmitComment={createComment}
-          />
-        ))}
-      </div>
-    </main>
-  );
+    </div>
+  </main>
+);
 }
