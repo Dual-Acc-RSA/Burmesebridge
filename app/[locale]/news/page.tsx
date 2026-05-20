@@ -54,8 +54,39 @@ export default function NewsPage() {
   const [items, setItems] = useState<NewsItem[]>([]);
 
   useEffect(() => {
-    loadItems();
-  }, []);
+  let mounted = true;
+
+  async function init() {
+    if (!mounted) return;
+
+    await loadItems();
+  }
+
+  init();
+
+  const channel = supabase
+    .channel("news-live-update")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "news",
+      },
+      async () => {
+        if (!mounted) return;
+
+        await loadItems();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    mounted = false;
+
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   async function loadItems() {
     const { data, error } = await supabase

@@ -15,7 +15,7 @@ type Item = {
   created_at: string;
 };
 
-export default function JobsPage() {
+export default function LearnPage() {
   const params = useParams();
   const locale = String(params.locale || "my");
 
@@ -31,8 +31,39 @@ en: { title: "Learning", empty: "No learning content yet" },
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
-    loadItems();
-  }, []);
+  let mounted = true;
+
+  async function init() {
+    if (!mounted) return;
+
+    await loadItems();
+  }
+
+  init();
+
+  const channel = supabase
+    .channel("news-live-update")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "news",
+      },
+      async () => {
+        if (!mounted) return;
+
+        await loadItems();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    mounted = false;
+
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   async function loadItems() {
     const { data, error } = await supabase

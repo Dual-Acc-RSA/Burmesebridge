@@ -103,6 +103,11 @@ function NewsContent() {
 
   const [items, setItems] = useState<NewsItem[]>([]);
   const [category, setCategory] = useState<Category>("news");
+  const [pinned,setPinned]=useState(false);
+
+const [featured,setFeatured]=useState(false);
+
+const [hot,setHot]=useState(false);
 
   const [titleMy, setTitleMy] = useState("");
   const [titleZh, setTitleZh] = useState("");
@@ -202,6 +207,9 @@ function NewsContent() {
     const { error } = await supabase.from("news").insert({
       category,
       locale,
+      pinned,
+featured,
+hot,
       status: "published",
       source_language: locale,
       author_id: user?.id || null,
