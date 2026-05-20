@@ -1,140 +1,83 @@
-export default async function JobsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+"use client";
 
-  const content = {
-    my: {
-      title: "အလုပ်အကိုင်",
-      subtitle: "မြန်မာလူမျိုးများအတွက် ဘာသာပြန်၊ စက်ရုံ၊ ဝန်ဆောင်မှုလုပ်ငန်း အလုပ်အကိုင်များ",
-      jobs: [
-        {
-          title: "တရုတ်-မြန်မာ ဘာသာပြန်",
-          text: "တရုတ်စာနှင့် မြန်မာစာ တတ်သူများအတွက် ဘာသာပြန်နှင့် ပရောဂျက်ညှိနှိုင်းအလုပ်။",
-          meta: "ဘန်ကောက် · အချိန်ပြည့် · အတွေ့အကြုံလိုအပ်",
-        },
-        {
-          title: "စက်ရုံ ညှိနှိုင်းရေးဝန်ထမ်း",
-          text: "အလုပ်သမားများနှင့် မန်နေဂျာများအကြား ဆက်သွယ်ညှိနှိုင်းရန်။",
-          meta: "ထိုင်းနိုင်ငံ · တရုတ်စာတတ်သူ ဦးစားပေး",
-        },
-        {
-          title: "ဝန်ဆောင်မှုလုပ်ငန်း တရုတ်စာအကူ",
-          text: "ဆိုင်၊ ရုံး၊ ဖောက်သည်ဝန်ဆောင်မှုတွင် တရုတ်စကားသုံးနိုင်သူ။",
-          meta: "အချိန်ပိုင်း / အချိန်ပြည့်",
-        },
-      ],
-    },
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-    zh: {
-      title: "工作信息",
-      subtitle: "面向缅甸人的翻译、工厂、服务业和相关工作信息",
-      jobs: [
-        {
-          title: "中缅翻译",
-          text: "适合会中文和缅语的人，可做现场翻译、项目协调。",
-          meta: "曼谷 · 全职 · 需要经验",
-        },
-        {
-          title: "工厂协调员",
-          text: "负责中缅沟通、员工协调、资料翻译。",
-          meta: "泰国 · 全职 · 会中文优先",
-        },
-        {
-          title: "服务业中文助手",
-          text: "适合会基础中文的缅甸人，负责客户沟通。",
-          meta: "曼谷 · 兼职/全职",
-        },
-      ],
-    },
+type Item = {
+  id: number;
+  title_my: string | null;
+  title_zh: string | null;
+  title_en: string | null;
+  content_my: string | null;
+  content_zh: string | null;
+  content_en: string | null;
+  created_at: string;
+};
 
-    en: {
-      title: "Jobs",
-      subtitle: "Translation, factory, service and related job information for Burmese users",
-      jobs: [
-        {
-          title: "Chinese-Burmese Translator",
-          text: "For people who speak Chinese and Burmese. On-site translation and project coordination.",
-          meta: "Bangkok · Full-time · Experience required",
-        },
-        {
-          title: "Factory Coordinator",
-          text: "Coordinate communication between Chinese managers and Burmese workers.",
-          meta: "Thailand · Full-time · Chinese preferred",
-        },
-        {
-          title: "Service Chinese Assistant",
-          text: "Suitable for Burmese users with basic Chinese communication skills.",
-          meta: "Bangkok · Part-time / Full-time",
-        },
-      ],
-    },
+export default function JobsPage() {
+  const params = useParams();
+  const locale = String(params.locale || "my");
+
+  const t = {
+    my: { title: "အလုပ်အကိုင်", empty: "အလုပ်အကိုင် အချက်အလက် မရှိသေးပါ" },
+    zh: { title: "工作信息", empty: "暂无工作信息" },
+    en: { title: "Jobs", empty: "No jobs yet" },
+  }[locale as "my" | "zh" | "en"] || {
+    title: "Jobs",
+    empty: "No jobs yet",
   };
 
-  const t = content[locale as keyof typeof content] || content.en;
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  async function loadItems() {
+    const { data, error } = await supabase
+      .from("news")
+      .select("id, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at")
+      .eq("status", "published")
+      .eq("category", "jobs")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setItems((data || []) as Item[]);
+  }
+
+  function getTitle(item: Item) {
+    if (locale === "zh") return item.title_zh || item.title_my || item.title_en || "";
+    if (locale === "en") return item.title_en || item.title_my || item.title_zh || "";
+    return item.title_my || item.title_zh || item.title_en || "";
+  }
+
+  function getContent(item: Item) {
+    if (locale === "zh") return item.content_zh || item.content_my || item.content_en || "";
+    if (locale === "en") return item.content_en || item.content_my || item.content_zh || "";
+    return item.content_my || item.content_zh || item.content_en || "";
+  }
 
   return (
-    <main
-      style={{
-        padding: "48px 24px",
-        background: "#f8fafc",
-        minHeight: "100vh",
-      }}
-    >
-      <section
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        <h1 style={{ fontSize: "48px", marginBottom: "14px" }}>
-          {t.title}
-        </h1>
+    <main className="feedShell">
+      <h1 className="feedTitle">{t.title}</h1>
 
-        <p
-          style={{
-            color: "#64748b",
-            fontSize: "20px",
-            lineHeight: 1.8,
-            marginBottom: "36px",
-          }}
-        >
-          {t.subtitle}
-        </p>
+      <div style={{ display: "grid", gap: 18 }}>
+        {items.length === 0 && <div className="feedCard">{t.empty}</div>}
 
-        <div style={{ display: "grid", gap: "20px" }}>
-          {t.jobs.map((job, index) => (
-            <article
-              key={index}
-              style={{
-                background: "white",
-                padding: "30px",
-                borderRadius: "22px",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
-              }}
-            >
-              <h2 style={{ fontSize: "30px", marginBottom: "14px" }}>
-                {job.title}
-              </h2>
-
-              <p
-                style={{
-                  color: "#475569",
-                  lineHeight: 1.9,
-                  fontSize: "18px",
-                }}
-              >
-                {job.text}
-              </p>
-
-              <small style={{ color: "#64748b" }}>{job.meta}</small>
-            </article>
-          ))}
-        </div>
-      </section>
+        {items.map((item) => (
+          <article key={item.id} className="feedCard">
+            <h2>{getTitle(item)}</h2>
+            <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.9 }}>
+              {getContent(item)}
+            </p>
+          </article>
+        ))}
+      </div>
     </main>
   );
 }

@@ -1,157 +1,83 @@
-export default async function LearnPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+"use client";
 
-  const content = {
-    my: {
-      title: "သင်ယူရန်",
-      subtitle: "မြန်မာလူမျိုးများအတွက် တရုတ်စကားပြော သင်ခန်းစာများ",
-      cards: [
-        {
-          title: "တရုတ်စကားပြော",
-          text: "နေ့စဉ်အသုံးများသော တရုတ်စကားပြောများကို အခြေခံမှစ၍ လေ့လာနိုင်သည်။",
-        },
-        {
-          title: "အလုပ်သုံး တရုတ်စာ",
-          text: "စက်ရုံ၊ ဆောက်လုပ်ရေး၊ ဆိုင်၊ ရုံး အလုပ်များတွင် အသုံးဝင်သော စကားများ။",
-        },
-        {
-          title: "နေ့စဉ်သုံး",
-          text: "စားသောက်၊ ဈေးဝယ်၊ လမ်းမေး၊ ဆေးရုံသွားရာတွင် အသုံးပြုနိုင်သော စကားများ။",
-        },
-        {
-          title: "ဗီဒီယိုသင်ခန်းစာ",
-          text: "YouTube / Facebook / TikTok ဗီဒီယိုများဖြင့် လေ့လာနိုင်သည်။",
-        },
-      ],
-    },
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-    zh: {
-      title: "学习区",
-      subtitle: "面向缅甸人的中文口语学习内容",
-      cards: [
-        {
-          title: "中文口语",
-          text: "从零基础开始学习最实用的中文口语。",
-        },
-        {
-          title: "打工中文",
-          text: "适合工厂、工地、服务业、办公室等工作场景。",
-        },
-        {
-          title: "生活中文",
-          text: "吃饭、购物、问路、看病等日常生活中文。",
-        },
-        {
-          title: "视频学习",
-          text: "嵌入 YouTube / Facebook / TikTok 视频，免费且不占服务器空间。",
-        },
-      ],
-    },
+type Item = {
+  id: number;
+  title_my: string | null;
+  title_zh: string | null;
+  title_en: string | null;
+  content_my: string | null;
+  content_zh: string | null;
+  content_en: string | null;
+  created_at: string;
+};
 
-    en: {
-      title: "Learn",
-      subtitle: "Chinese speaking lessons for Burmese learners",
-      cards: [
-        {
-          title: "Speaking Chinese",
-          text: "Practical Chinese speaking lessons from beginner level.",
-        },
-        {
-          title: "Workplace Chinese",
-          text: "Useful Chinese for factory, construction, shop and office work.",
-        },
-        {
-          title: "Daily Chinese",
-          text: "Chinese for food, shopping, directions and hospital visits.",
-        },
-        {
-          title: "Video Lessons",
-          text: "Learn with embedded YouTube, Facebook and TikTok videos.",
-        },
-      ],
-    },
+export default function JobsPage() {
+  const params = useParams();
+  const locale = String(params.locale || "my");
+
+  const t = {
+    my: { title: "လေ့လာရန်", empty: "လေ့လာရေး အကြောင်းအရာ မရှိသေးပါ" },
+zh: { title: "学习内容", empty: "暂无学习内容" },
+en: { title: "Learning", empty: "No learning content yet" },
+  }[locale as "my" | "zh" | "en"] || {
+    title: "Learn",
+    empty: "No Learn yet",
   };
 
-  const t = content[locale as keyof typeof content] || content.en;
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  async function loadItems() {
+    const { data, error } = await supabase
+      .from("news")
+      .select("id, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at")
+      .eq("status", "published")
+      .eq("category", "learn")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setItems((data || []) as Item[]);
+  }
+
+  function getTitle(item: Item) {
+    if (locale === "zh") return item.title_zh || item.title_my || item.title_en || "";
+    if (locale === "en") return item.title_en || item.title_my || item.title_zh || "";
+    return item.title_my || item.title_zh || item.title_en || "";
+  }
+
+  function getContent(item: Item) {
+    if (locale === "zh") return item.content_zh || item.content_my || item.content_en || "";
+    if (locale === "en") return item.content_en || item.content_my || item.content_zh || "";
+    return item.content_my || item.content_zh || item.content_en || "";
+  }
 
   return (
-    <main
-      style={{
-        padding: "48px 24px",
-        background: "#f8fafc",
-        minHeight: "100vh",
-      }}
-    >
-      <section
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "48px",
-            marginBottom: "14px",
-          }}
-        >
-          {t.title}
-        </h1>
+    <main className="feedShell">
+      <h1 className="feedTitle">{t.title}</h1>
 
-        <p
-          style={{
-            color: "#64748b",
-            fontSize: "20px",
-            lineHeight: 1.8,
-            marginBottom: "36px",
-          }}
-        >
-          {t.subtitle}
-        </p>
+      <div style={{ display: "grid", gap: 18 }}>
+        {items.length === 0 && <div className="feedCard">{t.empty}</div>}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-            gap: "24px",
-          }}
-        >
-          {t.cards.map((card, index) => (
-            <div
-              key={index}
-              style={{
-                background: "white",
-                padding: "32px",
-                borderRadius: "22px",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "30px",
-                  marginBottom: "18px",
-                }}
-              >
-                {card.title}
-              </h2>
-
-              <p
-                style={{
-                  color: "#475569",
-                  lineHeight: 1.9,
-                  fontSize: "18px",
-                }}
-              >
-                {card.text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+        {items.map((item) => (
+          <article key={item.id} className="feedCard">
+            <h2>{getTitle(item)}</h2>
+            <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.9 }}>
+              {getContent(item)}
+            </p>
+          </article>
+        ))}
+      </div>
     </main>
   );
 }
