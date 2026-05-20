@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-
+import Badge from "@/components/Badges";
 type Item = {
   id: number;
+  pinned: boolean | null;
+  featured: boolean | null;
+  hot: boolean | null;
   title_my: string | null;
   title_zh: string | null;
   title_en: string | null;
@@ -68,9 +71,12 @@ export default function JobsPage() {
   async function loadItems() {
     const { data, error } = await supabase
       .from("news")
-      .select("id, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at")
+      .select("id, pinned, featured, hot, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at")
       .eq("status", "published")
       .eq("category", "jobs")
+      .order("pinned", { ascending: false })
+      .order("hot", { ascending: false })
+      .order("featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -102,7 +108,28 @@ export default function JobsPage() {
 
         {items.map((item) => (
           <article key={item.id} className="feedCard">
+            <div
+            style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+            }}
+            >
             <h2>{getTitle(item)}</h2>
+
+            {item.pinned && (
+            <Badge type="pinned" />
+            )}
+
+            {item.hot && (
+            <Badge type="hot" />
+            )}
+
+            {item.featured && (
+            <Badge type="featured" />
+           )}
+            </div>
             <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.9 }}>
               {getContent(item)}
             </p>

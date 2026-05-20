@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Badge from "@/components/Badges";
 
 type Category = "news" | "jobs" | "learn";
 
 type NewsItem = {
   id: number;
   category: Category | null;
+  pinned: boolean | null;
+  featured: boolean | null;
+  hot: boolean | null;
   title_my: string | null;
   title_zh: string | null;
   title_en: string | null;
@@ -92,9 +96,12 @@ export default function NewsPage() {
     const { data, error } = await supabase
       .from("news")
       .select(
-        "id, category, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
+        "id, category,pinned, featured, hot, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
       )
       .eq("status", "published")
+      .order("pinned", { ascending: false })
+      .order("hot", { ascending: false })
+      .order("featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -198,15 +205,28 @@ export default function NewsPage() {
               {getCategoryLabel(item.category)}
             </div>
 
-            <h2
-              style={{
-                fontSize: 30,
-                marginBottom: 14,
-                color: "#0f172a",
-              }}
-            >
-              {getTitle(item)}
-            </h2>
+            <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  }}
+>
+  <h2>{getTitle(item)}</h2>
+
+  {item.pinned && (
+    <Badge type="pinned" />
+  )}
+
+  {item.hot && (
+    <Badge type="hot" />
+  )}
+
+  {item.featured && (
+    <Badge type="featured" />
+  )}
+</div>
 
             <p
               style={{

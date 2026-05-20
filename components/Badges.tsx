@@ -9,8 +9,12 @@ import {
   Shield,
   GraduationCap,
   Star,
-  UserRound
+  UserRound,
+  Pin,
+  Flame,
+  Sparkles
 } from "lucide-react";
+import { features } from "node:process";
 
 type BadgeType =
   | "verified"
@@ -18,7 +22,10 @@ type BadgeType =
   | "admin"
   | "teacher"
   | "vip"
-  | "member";
+  | "member"
+  | "pinned"
+  | "hot"
+  | "featured";
 
 export default function Badge({
   type,
@@ -42,7 +49,10 @@ moderator:"စီမံခန့်ခွဲသူ",
 admin:"အက်မင်",
 teacher:"ဆရာ",
 vip:"VIP",
-member:"အသင်းဝင်"
+member:"အသင်းဝင်",
+pinned:"ထိပ်ဆုံးပို့စ်",
+hot:"လူကြိုက်များ",
+featured:"အကြံပြု"
 },
 
 zh:{
@@ -51,7 +61,10 @@ moderator:"版主",
 admin:"管理员",
 teacher:"老师",
 vip:"VIP",
-member:"会员"
+member:"会员",
+pinned:"置顶",
+hot:"热门",
+featured:"推荐"
 },
 
 en:{
@@ -60,7 +73,10 @@ moderator:"Moderator",
 admin:"Admin",
 teacher:"Teacher",
 vip:"VIP",
-member:"Member"
+member:"Member",
+pinned:"Pinned",
+hot:"Hot",
+featured:"Featured"
 }
 
 };
@@ -100,7 +116,21 @@ color:"#d97706"
 member:{
 icon:<UserRound size={16}/>,
 color:"#64748b"
-}
+},
+pinned: {
+  icon: <Pin size={16} />,
+  color: "#4f46e5",
+},
+
+hot: {
+  icon: <Flame size={16} />,
+  color: "#dc2626",
+},
+
+featured: {
+  icon: <Sparkles size={16} />,
+  color: "#ca8a04",
+},
 
 };
 

@@ -232,6 +232,9 @@ hot,
     }
 
     setCategory("news");
+    setPinned(false);
+setFeatured(false);
+setHot(false);
     setTitleMy("");
     setTitleZh("");
     setTitleEn("");
@@ -287,6 +290,34 @@ hot,
             <option value="jobs">{t.jobs}</option>
             <option value="learn">{t.learn}</option>
           </select>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+  <label>
+    <input
+      type="checkbox"
+      checked={pinned}
+      onChange={(e) => setPinned(e.target.checked)}
+    />
+    {" "}置顶
+  </label>
+
+  <label>
+    <input
+      type="checkbox"
+      checked={featured}
+      onChange={(e) => setFeatured(e.target.checked)}
+    />
+    {" "}推荐
+  </label>
+
+  <label>
+    <input
+      type="checkbox"
+      checked={hot}
+      onChange={(e) => setHot(e.target.checked)}
+    />
+    {" "}热门
+  </label>
+</div>
 
           <input
             value={titleMy}
