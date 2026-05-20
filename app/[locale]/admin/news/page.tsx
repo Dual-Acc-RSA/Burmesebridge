@@ -11,6 +11,9 @@ type Category = "news" | "jobs" | "learn";
 type NewsItem = {
   id: number;
   category: Category | null;
+  pinned: boolean | null;
+  featured: boolean | null;
+  hot: boolean | null;
   title_my: string | null;
   title_zh: string | null;
   title_en: string | null;
@@ -32,10 +35,6 @@ function NewsContent() {
   const params = useParams();
   const locale = String(params.locale || "my");
 
-  /**
-   * 页面文字三语配置。
-   * 所有按钮、提示、标题都从这里取，避免硬编码英文。
-   */
   const text = {
     my: {
       pageTitle: "အချက်အလက် ထုတ်ပြန်ရန်",
@@ -53,9 +52,13 @@ function NewsContent() {
       publish: "ထုတ်ပြန်ရန်",
       delete: "ဖျက်ရန်",
       empty: "ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
-      missingDraftSource: "ဘာသာစကားတစ်မျိုး၏ ခေါင်းစဉ်နှင့် အကြောင်းအရာကို အရင်ဖြည့်ပါ",
+      missingDraftSource:
+        "ဘာသာစကားတစ်မျိုး၏ ခေါင်းစဉ်နှင့် အကြောင်းအရာကို အရင်ဖြည့်ပါ",
       draftFailed: "မူကြမ်းထုတ်ရာတွင် မအောင်မြင်ပါ",
       confirmDelete: "ဒီအချက်အလက်ကို ဖျက်မှာ သေချာပါသလား?",
+      pinned: "ထိပ်ဆုံးပို့စ်",
+      featured: "အကြံပြု",
+      hot: "လူကြိုက်များ",
     },
     zh: {
       pageTitle: "发布信息",
@@ -76,6 +79,9 @@ function NewsContent() {
       missingDraftSource: "请先填写任意一种语言的标题和内容",
       draftFailed: "生成失败",
       confirmDelete: "确定要删除这条信息吗？",
+      pinned: "置顶",
+      featured: "推荐",
+      hot: "热门",
     },
     en: {
       pageTitle: "Publish",
@@ -96,6 +102,9 @@ function NewsContent() {
       missingDraftSource: "Please fill in one language title and content first",
       draftFailed: "Failed to generate draft",
       confirmDelete: "Delete this item?",
+      pinned: "Pinned",
+      featured: "Featured",
+      hot: "Hot",
     },
   };
 
@@ -103,11 +112,10 @@ function NewsContent() {
 
   const [items, setItems] = useState<NewsItem[]>([]);
   const [category, setCategory] = useState<Category>("news");
-  const [pinned,setPinned]=useState(false);
 
-const [featured,setFeatured]=useState(false);
-
-const [hot,setHot]=useState(false);
+  const [pinned, setPinned] = useState(false);
+  const [featured, setFeatured] = useState(false);
+  const [hot, setHot] = useState(false);
 
   const [titleMy, setTitleMy] = useState("");
   const [titleZh, setTitleZh] = useState("");
@@ -121,16 +129,15 @@ const [hot,setHot]=useState(false);
     loadItems();
   }, []);
 
-  /**
-   * 读取已发布的信息列表。
-   * 这里只读取后台管理需要显示的字段。
-   */
   async function loadItems() {
     const { data, error } = await supabase
       .from("news")
       .select(
-        "id, category, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
+        "id, category, pinned, featured, hot, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
       )
+      .order("pinned", { ascending: false })
+      .order("hot", { ascending: false })
+      .order("featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -141,17 +148,6 @@ const [hot,setHot]=useState(false);
     setItems((data || []) as NewsItem[]);
   }
 
-  /**
-   * 生成三语草稿。
-   *
-   * 当前阶段：
-   * - 调用 /api/admin/translate-news
-   * - 该 API 目前只是安全骨架，会把原文复制到三语字段
-   *
-   * 后续阶段：
-   * - 在 API 内接入真正 AI 翻译/本地化服务
-   * - 前端这里不用再大改
-   */
   async function generateDraft() {
     const sourceTitle = titleMy || titleZh || titleEn;
     const sourceContent = contentMy || contentZh || contentEn;
@@ -189,10 +185,6 @@ const [hot,setHot]=useState(false);
     setContentEn(result.data.content_en || sourceContent);
   }
 
-  /**
-   * 发布信息。
-   * 如果某种语言没填，会用已有语言做 fallback，避免前台空白。
-   */
   async function createNews() {
     if (!titleMy.trim() && !titleZh.trim() && !titleEn.trim()) return;
     if (!contentMy.trim() && !contentZh.trim() && !contentEn.trim()) return;
@@ -208,8 +200,8 @@ const [hot,setHot]=useState(false);
       category,
       locale,
       pinned,
-featured,
-hot,
+      featured,
+      hot,
       status: "published",
       source_language: locale,
       author_id: user?.id || null,
@@ -233,8 +225,9 @@ hot,
 
     setCategory("news");
     setPinned(false);
-setFeatured(false);
-setHot(false);
+    setFeatured(false);
+    setHot(false);
+
     setTitleMy("");
     setTitleZh("");
     setTitleEn("");
@@ -245,9 +238,6 @@ setHot(false);
     await loadItems();
   }
 
-  /**
-   * 删除发布信息。
-   */
   async function deleteNews(newsId: number) {
     const ok = confirm(t.confirmDelete);
     if (!ok) return;
@@ -262,9 +252,6 @@ setHot(false);
     await loadItems();
   }
 
-  /**
-   * 根据分类显示当前语言标签。
-   */
   function getCategoryLabel(value: Category | null) {
     if (value === "jobs") return t.jobs;
     if (value === "learn") return t.learn;
@@ -290,34 +277,42 @@ setHot(false);
             <option value="jobs">{t.jobs}</option>
             <option value="learn">{t.learn}</option>
           </select>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-  <label>
-    <input
-      type="checkbox"
-      checked={pinned}
-      onChange={(e) => setPinned(e.target.checked)}
-    />
-    {" "}置顶
-  </label>
 
-  <label>
-    <input
-      type="checkbox"
-      checked={featured}
-      onChange={(e) => setFeatured(e.target.checked)}
-    />
-    {" "}推荐
-  </label>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: 12,
+            }}
+          >
+            <label>
+              <input
+                type="checkbox"
+                checked={pinned}
+                onChange={(event) => setPinned(event.target.checked)}
+              />{" "}
+              {t.pinned}
+            </label>
 
-  <label>
-    <input
-      type="checkbox"
-      checked={hot}
-      onChange={(e) => setHot(e.target.checked)}
-    />
-    {" "}热门
-  </label>
-</div>
+            <label>
+              <input
+                type="checkbox"
+                checked={featured}
+                onChange={(event) => setFeatured(event.target.checked)}
+              />{" "}
+              {t.featured}
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={hot}
+                onChange={(event) => setHot(event.target.checked)}
+              />{" "}
+              {t.hot}
+            </label>
+          </div>
 
           <input
             value={titleMy}
@@ -363,7 +358,7 @@ setHot(false);
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
-            type="button"
+              type="button"
               onClick={generateDraft}
               style={{
                 ...button,
@@ -373,9 +368,7 @@ setHot(false);
               {t.generateDraft}
             </button>
 
-            <button
-            type="button" 
-            onClick={createNews} style={button}>
+            <button type="button" onClick={createNews} style={button}>
               {t.publish}
             </button>
           </div>

@@ -14,7 +14,25 @@ import AdminStatCard from "@/components/admin/AdminStatCard";
 export default function AdminPage() {
   const params = useParams();
   const locale = String(params.locale || "my");
+const text = {
+  my: {
+    dashboard: "အက်မင်ဒက်ရှ်ဘုတ်",
+    users: "အသုံးပြုသူများ",
+    posts: "ပို့စ်များ",
+  },
+  zh: {
+    dashboard: "后台管理",
+    users: "用户",
+    posts: "帖子",
+  },
+  en: {
+    dashboard: "Admin Dashboard",
+    users: "Users",
+    posts: "Posts",
+  },
+};
 
+  const t = text[locale as keyof typeof text] || text.en;
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
   const [usersCount, setUsersCount] = useState(0);
@@ -70,11 +88,11 @@ export default function AdminPage() {
       <AdminSidebar />
 
       <div className="adminContent">
-        <h1>Admin Dashboard</h1>
+        <h1>{t.dashboard}</h1>
 
         <div className="adminGrid">
-          <AdminStatCard title="Users" value={usersCount} />
-          <AdminStatCard title="Posts" value={postsCount} />
+          <AdminStatCard title={t.users} value={usersCount} />
+          <AdminStatCard title={t.posts} value={postsCount} />
         </div>
       </div>
     </div>
