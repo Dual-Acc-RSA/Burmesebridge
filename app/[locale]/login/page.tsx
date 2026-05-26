@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const params = useParams();
   const locale = String(params.locale || "en");
+  const router = useRouter(); // 引入 router
+
+  // 新增：检查用户是否已登录，如果已登录则重定向
+  useEffect(() => {
+    async function checkUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        router.replace(`/${locale}/me`);
+      }
+    }
+
+    checkUser();
+  }, [locale, router]);
 
   const text = {
     my: {
