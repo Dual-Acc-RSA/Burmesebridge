@@ -13,12 +13,12 @@ export default async function LocaleLayout({
 
   const nav = {
     my: {
-      home: "ပင်မစာမျက်နှာ",
-      learn: "သင်ယူရန်",
+      home: "ပင်မ",
+      learn: "လေ့လာရန်",
       forum: "Community",
       jobs: "အလုပ်",
       news: "သတင်း",
-      checkin: "ချက်အင်လုပ်ရန်",
+      checkin: "ချက်အင်",
     },
     zh: {
       home: "首页",
@@ -47,14 +47,9 @@ export default async function LocaleLayout({
           BurmeseBridge
         </Link>
 
-        <div className="site-menu">
-          <Link href={`/${locale}`}>{t.home}</Link>
-          <Link href={`/${locale}/learn`}>{t.learn}</Link>
-          <Link href={`/${locale}/forum`}>{t.forum}</Link>
-          <Link href={`/${locale}/jobs`}>{t.jobs}</Link>
-          <Link href={`/${locale}/news`}>{t.news}</Link>
-          <Link href={`/${locale}/checkin`}>{t.checkin}</Link>
-        </div>
+        {/* 桌面顶部菜单去掉，避免和首页入口重复。
+            保留空容器，防止原 CSS flex 布局突然错位。 */}
+        <div className="site-menu" aria-hidden="true" />
 
         <div className="site-actions">
           <AuthMenu locale={locale} />
@@ -64,6 +59,7 @@ export default async function LocaleLayout({
 
       <main className="site-main">{children}</main>
 
+      {/* 手机底部导航保留：这是移动端主要入口，不能删。 */}
       <div className="mobile-tabbar">
         <Link href={`/${locale}`}>{t.home}</Link>
         <Link href={`/${locale}/learn`}>{t.learn}</Link>

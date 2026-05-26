@@ -1,160 +1,488 @@
-export default async function HomePage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+"use client";
 
-  const content = {
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import {
+  Briefcase,
+  CalendarCheck,
+  ChevronRight,
+  Crown,
+  GraduationCap,
+  Globe,
+  MessageSquare,
+  Newspaper,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import Badge from "@/components/Badges";
+
+type Category = "news" | "jobs" | "learn";
+
+type HomeItem = {
+  id: number;
+  category: Category | null;
+  pinned: boolean | null;
+  featured: boolean | null;
+  hot: boolean | null;
+  title_my: string | null;
+  title_zh: string | null;
+  title_en: string | null;
+  content_my: string | null;
+  content_zh: string | null;
+  content_en: string | null;
+  created_at: string;
+};
+
+export default function HomePage() {
+  const params = useParams();
+  const locale = String(params.locale || "my");
+
+  const text = {
     my: {
-      title: "BurmeseBridge",
-      subtitle:
-        "မြန်မာလူမျိုးများအတွက် တရုတ်ဘာသာ သင်ယူရေးနှင့် လေ့လာရေး ပလက်ဖောင်း",
-      desc:
-        "တရုတ်စာလေ့လာရန် · မေးခွန်းမေးရန် · အတွေ့အကြုံမျှဝေရန်",
-
-      cards: [
-        {
-          title: "သင်ယူရန်",
-          text:
-            "တရုတ်စကားပြော၊ အလုပ်သုံးတရုတ်စာ၊ နေ့စဉ်အသုံးအနှုန်းများကို လေ့လာနိုင်သည်။",
-        },
-        {
-          title: "အသိုင်းအဝိုင်း",
-          text:
-            "မေးခွန်းမေးနိုင်သည်၊ အတွေ့အကြုံမျှဝေနိုင်သည်၊ အချင်းချင်းကူညီနိုင်သည်။",
-        },
-        {
-          title: "အလုပ်အကိုင်",
-          text:
-            "ဘာသာပြန်၊ စက်ရုံ၊ ဝန်ဆောင်မှုလုပ်ငန်း အလုပ်အကိုင်များကို ရှာဖွေနိုင်သည်။",
-        },
-        {
-          title: "သတင်း",
-          text:
-            "ထိုင်း၊ မြန်မာ၊ အလုပ်သမား၊ ဗီဇာနှင့် စာရွက်စာတမ်းဆိုင်ရာ သတင်းများ။",
-        },
-      ],
+      heroBadge: "ထိုင်းနိုင်ငံရှိ မြန်မာများအတွက်",
+      heroTitle: "အလုပ်၊ သတင်း၊ တရုတ်စာ နှင့် လူမှုအသိုင်းအဝိုင်း",
+      heroSub:
+        "BurmeseBridge သည် မြန်မာများအတွက် သင်ယူရေး၊ အလုပ်အကိုင်နှင့် သတင်းအချက်အလက် ပလက်ဖောင်းဖြစ်သည်။",
+      register: "အခမဲ့ စာရင်းသွင်းရန်",
+      member: "အသင်းဝင်",
+      news: "သတင်း",
+      jobs: "အလုပ်အကိုင်",
+      learn: "လေ့လာရန်",
+      forum: "ဖိုရမ်",
+      checkin: "ချက်အင်",
+      community: "လူမှုအသိုင်းအဝိုင်း",
+      pinned: "ထိပ်ဆုံး အချက်အလက်",
+      hotJobs: "လူကြိုက်များသော အလုပ်",
+      featuredLearn: "အကြံပြု လေ့လာရေး",
+      latestNews: "နောက်ဆုံးသတင်း",
+      readMore: "ဆက်ဖတ်ရန်",
+      go: "ဝင်ကြည့်ရန်",
+      checkinTitle: "နေ့စဉ် ချက်အင်",
+      checkinText: "နေ့စဉ် ဝင်ရောက်ပြီး အမှတ်စုဆောင်းပါ",
+      memberTitle: "အသင်းဝင် အစီအစဉ်",
+      memberText: "နောက်ပိုင်းတွင် ပရီမီယံ သင်ခန်းစာများနှင့် အထူးအကြောင်းအရာများ ထည့်နိုင်သည်။",
+      empty: "ထုတ်ပြန်ထားသော အချက်အလက် မရှိသေးပါ",
     },
-
     zh: {
-      title: "BurmeseBridge",
-      subtitle: "缅甸人中文学习平台",
-      desc: "学中文 · 问问题 · 分享经验",
-
-      cards: [
-        {
-          title: "学习区",
-          text: "中文口语、打工中文、生活中文、视频学习。",
-        },
-        {
-          title: "社区论坛",
-          text: "提问、交流、分享经验、互相帮助。",
-        },
-        {
-          title: "工作信息",
-          text: "翻译、工厂、服务业等相关信息。",
-        },
-        {
-          title: "新闻资讯",
-          text: "泰国、缅甸、劳工、证件相关资讯。",
-        },
-      ],
+      heroBadge: "泰国 · 缅甸同胞专属平台",
+      heroTitle: "劳务、新闻、汉语学习与社区",
+      heroSub: "BurmeseBridge 是面向缅甸用户的学习、求职、资讯与社区平台。",
+      register: "免费注册",
+      member: "了解会员",
+      news: "新闻",
+      jobs: "工作",
+      learn: "学习",
+      forum: "论坛",
+      checkin: "签到",
+      community: "社区",
+      pinned: "置顶内容",
+      hotJobs: "热门工作",
+      featuredLearn: "推荐学习",
+      latestNews: "最新新闻",
+      readMore: "阅读全文",
+      go: "进入",
+      checkinTitle: "每日签到",
+      checkinText: "每天签到，积累积分与学习记录",
+      memberTitle: "会员体系预留",
+      memberText: "后期可接入付费课程、会员内容和高级资料库。",
+      empty: "暂无发布内容",
     },
-
     en: {
-      title: "BurmeseBridge",
-      subtitle: "Chinese Learning Platform for Burmese Users",
-      desc: "Learn Chinese · Ask Questions · Share Experience",
-
-      cards: [
-        {
-          title: "Learning",
-          text:
-            "Speaking Chinese, workplace Chinese, daily Chinese and videos.",
-        },
-        {
-          title: "Forum",
-          text:
-            "Ask questions, communicate, share experience and help others.",
-        },
-        {
-          title: "Jobs",
-          text:
-            "Translation, factory jobs and service industry opportunities.",
-        },
-        {
-          title: "News",
-          text:
-            "Thailand, Myanmar, labor and visa related information.",
-        },
-      ],
+      heroBadge: "For Myanmar nationals in Thailand",
+      heroTitle: "Jobs, News, Chinese Learning and Community",
+      heroSub:
+        "BurmeseBridge is a learning, job, news and community platform for Myanmar users.",
+      register: "Sign up free",
+      member: "Membership",
+      news: "News",
+      jobs: "Jobs",
+      learn: "Learn",
+      forum: "Forum",
+      checkin: "Check-in",
+      community: "Community",
+      pinned: "Pinned Content",
+      hotJobs: "Hot Jobs",
+      featuredLearn: "Featured Learning",
+      latestNews: "Latest News",
+      readMore: "Read more",
+      go: "Open",
+      checkinTitle: "Daily Check-in",
+      checkinText: "Check in daily and collect points.",
+      memberTitle: "Membership Ready",
+      memberText: "Premium lessons, member content and resource library can be added later.",
+      empty: "No published content yet",
     },
   };
 
-  const t = content[locale as keyof typeof content] || content.en;
+  const t = text[locale as keyof typeof text] || text.en;
+  const [items, setItems] = useState<HomeItem[]>([]);
+
+  useEffect(() => {
+    loadItems();
+
+    const channel = supabase
+      .channel("home-news-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "news",
+        },
+        () => loadItems()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  async function loadItems() {
+    const { data, error } = await supabase
+      .from("news")
+      .select(
+        "id, category, pinned, featured, hot, title_my, title_zh, title_en, content_my, content_zh, content_en, created_at"
+      )
+      .eq("status", "published")
+      .order("pinned", { ascending: false })
+      .order("hot", { ascending: false })
+      .order("featured", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    if (error) {
+      console.log(error.message);
+      return;
+    }
+
+    setItems((data || []) as HomeItem[]);
+  }
+
+  function getTitle(item: HomeItem) {
+    if (locale === "zh") return item.title_zh || item.title_my || item.title_en || "";
+    if (locale === "en") return item.title_en || item.title_my || item.title_zh || "";
+    return item.title_my || item.title_zh || item.title_en || "";
+  }
+
+  function getContent(item: HomeItem) {
+    if (locale === "zh") return item.content_zh || item.content_my || item.content_en || "";
+    if (locale === "en") return item.content_en || item.content_my || item.content_zh || "";
+    return item.content_my || item.content_zh || item.content_en || "";
+  }
+
+  const pinnedItems = items.filter((item) => item.pinned).slice(0, 3);
+  const hotJobs = items.filter((item) => item.category === "jobs" && item.hot).slice(0, 3);
+  const featuredLearn = items.filter((item) => item.category === "learn" && item.featured).slice(0, 3);
+  const latestNews = items.filter((item) => item.category === "news").slice(0, 3);
 
   return (
-    <main
-      style={{
-        padding: "32px 24px 72px",
-        background: "#f8fafc",
-      }}
-    >
+    <main style={{ display: "grid", gap: 34 }}>
       <section
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
+          background: "linear-gradient(135deg,#0f2a3b,#0a1928)",
+          borderRadius: 28,
+          padding: "34px 26px",
+          border: "1px solid rgba(200,166,91,0.25)",
+          color: "white",
         }}
       >
-        <div className="home-hero">
-          <h1 className="home-hero-title">
-            {t.title}
-          </h1>
-
-          <p className="home-hero-subtitle">
-            {t.subtitle}
-          </p>
-
-          <p className="home-hero-desc">
-            {t.desc}
-          </p>
+        <div style={heroBadge}>
+          <Globe size={15} />
+          {t.heroBadge}
         </div>
 
-        <div className="home-card-grid">
-          {t.cards.map((card, index) => (
-            <div
-              key={index}
-              style={{
-                background: "white",
-                padding: "32px",
-                borderRadius: "22px",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "32px",
-                  marginBottom: "20px",
-                }}
-              >
-                {card.title}
-              </h2>
+        <h1 style={heroTitle}>{t.heroTitle}</h1>
+        <p style={heroSub}>{t.heroSub}</p>
 
-              <p
-                style={{
-                  color: "#475569",
-                  lineHeight: 1.9,
-                  fontSize: "18px",
-                }}
-              >
-                {card.text}
-              </p>
-            </div>
-          ))}
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
+          <Link href={`/${locale}/login`} style={primaryBtn}>
+            <Users size={16} />
+            {t.register}
+          </Link>
+
+          <Link href={`/${locale}/learn`} style={outlineBtn}>
+            <Crown size={16} />
+            {t.member}
+          </Link>
+        </div>
+      </section>
+
+      <section style={gridLinks}>
+        <HomeLink href={`/${locale}/learn`} icon={<GraduationCap />} label={t.learn} />
+        <HomeLink href={`/${locale}/jobs`} icon={<Briefcase />} label={t.jobs} />
+        <HomeLink href={`/${locale}/news`} icon={<Newspaper />} label={t.news} />
+        <HomeLink href={`/${locale}/forum`} icon={<MessageSquare />} label={t.forum} />
+        <HomeLink href={`/${locale}/checkin`} icon={<CalendarCheck />} label={t.checkin} />
+        <HomeLink href={`/${locale}/forum`} icon={<Users />} label={t.community} />
+      </section>
+
+      <ContentSection title={t.pinned} icon={<ShieldCheck size={20} />}>
+        {pinnedItems.length === 0 ? (
+          <Empty text={t.empty} />
+        ) : (
+          pinnedItems.map((item) => (
+            <ContentCard
+              key={item.id}
+              item={item}
+              title={getTitle(item)}
+              content={getContent(item)}
+              href={`/${locale}/${item.category || "news"}`}
+              action={t.readMore}
+            />
+          ))
+        )}
+      </ContentSection>
+
+      <ContentSection title={t.hotJobs} icon={<TrendingUp size={20} />}>
+        {hotJobs.length === 0 ? (
+          <Empty text={t.empty} />
+        ) : (
+          hotJobs.map((item) => (
+            <ContentCard
+              key={item.id}
+              item={item}
+              title={getTitle(item)}
+              content={getContent(item)}
+              href={`/${locale}/jobs`}
+              action={t.go}
+            />
+          ))
+        )}
+      </ContentSection>
+
+      <ContentSection title={t.featuredLearn} icon={<Sparkles size={20} />}>
+        {featuredLearn.length === 0 ? (
+          <Empty text={t.empty} />
+        ) : (
+          featuredLearn.map((item) => (
+            <ContentCard
+              key={item.id}
+              item={item}
+              title={getTitle(item)}
+              content={getContent(item)}
+              href={`/${locale}/learn`}
+              action={t.go}
+            />
+          ))
+        )}
+      </ContentSection>
+
+      <ContentSection title={t.latestNews} icon={<Newspaper size={20} />}>
+        {latestNews.length === 0 ? (
+          <Empty text={t.empty} />
+        ) : (
+          latestNews.map((item) => (
+            <ContentCard
+              key={item.id}
+              item={item}
+              title={getTitle(item)}
+              content={getContent(item)}
+              href={`/${locale}/news`}
+              action={t.readMore}
+            />
+          ))
+        )}
+      </ContentSection>
+
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
+        <div className="feedCard">
+          <div style={smallHead}>
+            <CalendarCheck size={22} color="#c8a65b" />
+            <strong>{t.checkinTitle}</strong>
+          </div>
+          <p style={muted}>{t.checkinText}</p>
+          <Link href={`/${locale}/checkin`} style={smallLink}>
+            {t.go}
+            <ChevronRight size={15} />
+          </Link>
+        </div>
+
+        <div className="feedCard">
+          <div style={smallHead}>
+            <Crown size={22} color="#c8a65b" />
+            <strong>{t.memberTitle}</strong>
+          </div>
+          <p style={muted}>{t.memberText}</p>
+          <Link href={`/${locale}/learn`} style={smallLink}>
+            {t.go}
+            <ChevronRight size={15} />
+          </Link>
         </div>
       </section>
     </main>
   );
 }
+
+function HomeLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link href={href} className="feedCard" style={homeLink}>
+      <span style={{ color: "#c8a65b" }}>{icon}</span>
+      <strong style={{ fontSize: 13 }}>{label}</strong>
+    </Link>
+  );
+}
+
+function ContentSection({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section>
+      <div style={sectionHead}>
+        <span style={{ color: "#c8a65b" }}>{icon}</span>
+        <h2 style={{ fontSize: 22 }}>{title}</h2>
+      </div>
+      <div style={{ display: "grid", gap: 14 }}>{children}</div>
+    </section>
+  );
+}
+
+function ContentCard({
+  item,
+  title,
+  content,
+  href,
+  action,
+}: {
+  item: HomeItem;
+  title: string;
+  content: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <article className="feedCard">
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <h3>{title}</h3>
+        {item.pinned && <Badge type="pinned" />}
+        {item.hot && <Badge type="hot" />}
+        {item.featured && <Badge type="featured" />}
+      </div>
+
+      <p style={cardText}>
+        {content.length > 160 ? `${content.slice(0, 160)}...` : content}
+      </p>
+
+      <Link href={href} style={smallLink}>
+        {action}
+        <ChevronRight size={15} />
+      </Link>
+    </article>
+  );
+}
+
+function Empty({ text }: { text: string }) {
+  return (
+    <div className="feedCard" style={{ color: "#64748b" }}>
+      {text}
+    </div>
+  );
+}
+
+const heroBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  color: "#c8a65b",
+  background: "rgba(200,166,91,0.1)",
+  borderRadius: 999,
+  padding: "7px 12px",
+  fontSize: 13,
+  fontWeight: 800,
+  marginBottom: 14,
+};
+
+const heroTitle = {
+  fontSize: "clamp(24px,4vw,42px)",
+  lineHeight: 1.35,
+  marginBottom: 14,
+  maxWidth: 880,
+};
+
+const heroSub = {
+  color: "#cbd5e1",
+  fontSize: 15,
+  lineHeight: 1.8,
+  maxWidth: 760,
+};
+
+const primaryBtn = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  background: "#c8a65b",
+  color: "#0a1928",
+  padding: "11px 18px",
+  borderRadius: 999,
+  fontWeight: 900,
+  textDecoration: "none",
+};
+
+const outlineBtn = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  border: "1px solid #c8a65b",
+  color: "#c8a65b",
+  padding: "11px 18px",
+  borderRadius: 999,
+  fontWeight: 900,
+  textDecoration: "none",
+};
+
+const gridLinks = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+  gap: 12,
+};
+
+const homeLink = {
+  display: "flex",
+  flexDirection: "column" as const,
+  alignItems: "center",
+  gap: 8,
+  textDecoration: "none",
+  color: "#0f172a",
+  padding: 16,
+};
+
+const sectionHead = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  borderLeft: "4px solid #c8a65b",
+  paddingLeft: 10,
+  marginBottom: 14,
+  color: "#0f172a",
+};
+
+const cardText = {
+  marginTop: 10,
+  color: "#475569",
+  lineHeight: 1.8,
+  whiteSpace: "pre-wrap" as const,
+};
+
+const smallHead = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+};
+
+const muted = {
+  color: "#64748b",
+  marginTop: 10,
+  lineHeight: 1.8,
+};
+
+const smallLink = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  color: "#c8a65b",
+  fontWeight: 800,
+  textDecoration: "none",
+  marginTop: 12,
+};
